@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-//@FeignClient(name = "oim", path = "/oim")
+@FeignClient(name = "oim", path = "/oim")
 public interface OimClient {
 
     @PutMapping("/ruolo/rename")
