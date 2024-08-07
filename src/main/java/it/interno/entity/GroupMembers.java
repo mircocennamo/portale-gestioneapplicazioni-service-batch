@@ -1,17 +1,17 @@
 package it.interno.entity;
 
 
-import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.DynamicUpdate;
 
+import jakarta.persistence.*;
 import java.sql.Timestamp;
 import java.util.Objects;
 
 @Entity
-@Table(name = "GROUPMEMBERS")
+@Table(name = "GROUPMEMBERS", schema = "SSD_SECURITY")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

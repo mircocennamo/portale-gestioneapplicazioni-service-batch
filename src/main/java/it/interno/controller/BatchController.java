@@ -10,6 +10,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 
 @RestController
@@ -21,7 +24,6 @@ public class BatchController {
 
     @PostMapping("/start")
     public ResponseEntity startJob(@RequestBody JobParameters jobParameters){
-
         jobService.deleteApplicationJob(jobParameters);
         return ResponseEntity.ok("delete Application Job started");
     }
@@ -33,4 +35,6 @@ public class BatchController {
         List<JobParameters> fileJobs = jobService.getAllJobs();
         return ResponseEntity.ok(fileJobs);
     }
+
+
 }

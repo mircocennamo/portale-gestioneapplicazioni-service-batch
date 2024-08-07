@@ -17,8 +17,8 @@ import org.springframework.stereotype.Repository;
 @Component
 public interface GroupMemberRepository extends JpaRepository<GroupMembers, GroupMembersKey> {
     @Query(
-            value = "SELECT g.* FROM GROUPMEMBERS g WHERE g.APP_ID=?1 AND g.DATA_CAN IS NULL ORDER BY g.G_MEMBER DESC",
-            countQuery = "SELECT count(*) FROM GROUPMEMBERS g WHERE g.APP_ID=?1 AND g.DATA_CAN IS  NULL",
+            value = "SELECT g.* FROM SSD_SECURITY.GROUPMEMBERS g WHERE g.APP_ID=?1 AND g.DATA_CAN IS NULL ORDER BY g.G_MEMBER DESC",
+            countQuery = "SELECT count(*) FROM SSD_SECURITY.GROUPMEMBERS g WHERE g.APP_ID=?1 AND g.DATA_CAN IS  NULL",
             nativeQuery = true)
     Page<GroupMembers> findByAppId(String appId,Pageable pageable);
 

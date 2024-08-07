@@ -1,4 +1,4 @@
-package it.interno.listener;
+package it.interno.listener.regolesicurezza;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.BatchStatus;
@@ -9,20 +9,20 @@ import org.springframework.stereotype.Component;
 
 @Component
 @Slf4j
-public class GroupMemberStepExecutionListener implements StepExecutionListener {
+public class RegoleSicurezzaStepExecutionListener implements StepExecutionListener {
 
 
     @Override
     public void beforeStep(StepExecution stepExecution) {
-        log.info("GroupMemberStepExecutionListener Step started at: " + stepExecution.getStartTime());
+        log.info("RegoleSicurezzaStepExecutionListener Step started at: " + stepExecution.getStartTime());
         // Add any setup or logic before the job starts
     }
 
     @Override
     public ExitStatus afterStep(StepExecution stepExecution) {
-        log.info("GroupMemberStepExecutionListener Step finished at: " + stepExecution.getEndTime());
+        log.info("RegoleSicurezzaStepExecutionListener Step finished at: " + stepExecution.getEndTime());
         if (stepExecution.getStatus() == BatchStatus.COMPLETED) {
-            log.info("!!! GroupMemberStepExecutionListener STEP FINISHED! Time to verify the results");
+            log.info("!!! RegoleSicurezzaStepExecutionListener STEP FINISHED! Time to verify the results");
         }
         return null;
     }

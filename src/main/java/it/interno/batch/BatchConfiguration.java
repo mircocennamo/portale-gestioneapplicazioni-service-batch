@@ -1,23 +1,25 @@
 package it.interno.batch;
 
 import it.interno.entity.GroupMembers;
+import it.interno.entity.RegolaSicurezza;
 import it.interno.entity.Request;
-import it.interno.listener.GroupMemberStepExecutionListener;
+import it.interno.listener.gropuMembers.GroupMemberStepExecutionListener;
 import it.interno.listener.JobCompletionNotificationListener;
 import it.interno.listener.RequestStepExecutionListener;
-import it.interno.listener.gropuMembers.GroupMemberItemProcessListener;
-import it.interno.listener.gropuMembers.GroupMemberItemWriteListener;
-import it.interno.listener.gropuMembers.GroupMemberSkipListener;
-import it.interno.listener.gropuMembers.GroupMemeberItemReadListener;
+import it.interno.listener.gropuMembers.*;
+import it.interno.listener.regolesicurezza.RegoleSicurezzaSkipListener;
+import it.interno.listener.regolesicurezza.RegoleSicurezzaStepExecutionListener;
 import it.interno.listener.request.RequestItemProcessListener;
 import it.interno.listener.request.RequestItemReadListener;
 import it.interno.listener.request.RequestItemWriteListener;
 import it.interno.processor.GroupMemberItemProcessor;
 import it.interno.processor.RequestItemProcessor;
 import it.interno.repository.GroupMemberRepository;
+import it.interno.repository.RegolaSicurezzaRepository;
 import it.interno.repository.RequestRepository;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
+import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
@@ -30,6 +32,7 @@ import org.springframework.batch.item.data.builder.RepositoryItemWriterBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.cloud.task.configuration.EnableTask;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.VirtualThreadTaskExecutor;
@@ -37,6 +40,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.transaction.PlatformTransactionManager;
 
+import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -52,6 +56,9 @@ public class BatchConfiguration {
     @Autowired
     GroupMemberRepository groupMemberRepository;
 
+    @Autowired
+    RegolaSicurezzaRepository regolaSicurezzaRepository;
+
 
     @Bean
     public VirtualThreadTaskExecutor taskExecutor() {
@@ -60,11 +67,11 @@ public class BatchConfiguration {
 
 
     @Bean
-    public Job deleteApplication(JobRepository jobRepository, JobCompletionNotificationListener listener, Step stepRequest, Step stepGroupMember) {
+    public Job deleteApplication(JobRepository jobRepository, JobCompletionNotificationListener listener, Step stepRequest, Step stepGroupMember,Step stepRegoleSicurezza) {
         return new JobBuilder("deleteApplicationJob", jobRepository)
                 .incrementer(new RunIdIncrementer())
                 .listener(listener)
-                .start(stepRequest).next(stepGroupMember).build();
+                .start(stepRequest).next(stepGroupMember).next(stepRegoleSicurezza).build();
     }
 
 
@@ -96,8 +103,8 @@ public class BatchConfiguration {
     @Bean(destroyMethod = "")
     @StepScope
     public  GroupMemberItemProcessListener groupMemberItemProcessListener(@Value(("#{jobParameters['utenteCancellazione']}")) String utenteCancellazione,
-                                           @Value(("#{jobParameters['ufficioCancellazione']}")) String ufficioCancellazione) {
-        return new GroupMemberItemProcessListener(groupMemberRepository,utenteCancellazione,ufficioCancellazione);
+                                           @Value(("#{jobParameters['ufficioCancellazione']}")) String ufficioCancellazione,@Value(("#{jobParameters['currentTimeStamp']}")) Timestamp currentTimeStamp) {
+        return new GroupMemberItemProcessListener(groupMemberRepository,utenteCancellazione,ufficioCancellazione,currentTimeStamp);
     }
 
 
@@ -171,7 +178,7 @@ public class BatchConfiguration {
                 .reader(readerStepGroupMember(null)) //legge le righe della groupMemeber dal db da lavorare
                 .listener(new GroupMemberStepExecutionListener())
                 .listener(new GroupMemeberItemReadListener(groupMemberRepository))
-                .listener(groupMemberItemProcessListener(null,null)) //valorizza i campi della cancellazione
+                .listener(groupMemberItemProcessListener(null,null,null)) //valorizza i campi della cancellazione
                 .listener(new GroupMemberItemWriteListener()) //logga la scrittura sul db
                 .listener(new GroupMemberSkipListener())
                 .processor(processorGroup()) //chiama oim
@@ -181,6 +188,44 @@ public class BatchConfiguration {
     }
 
 
+//STEP 3 GESTIONE DI SICUREZZA
 
+    @Bean(destroyMethod = "")
+    @StepScope
+    public RepositoryItemReader<RegolaSicurezza> readerStepRegoleSicurezza(@Value(("#{jobParameters['applicationId']}")) String applicationId) {
+        Map<String, Sort.Direction> sortMap = new HashMap<>();
+        sortMap.put("G_NAME", Sort.Direction.DESC);
+        return new RepositoryItemReaderBuilder<RegolaSicurezza>()
+                .repository(regolaSicurezzaRepository)
+                .methodName("getRegoleByAppId")
+                .arguments(Arrays.asList(applicationId))
+                .sorts(sortMap)
+                .saveState(false)
+                .build();
+    }
+
+    @Bean
+    public RepositoryItemWriter<RegolaSicurezza> writerRegoleSicurezza() {
+        return new RepositoryItemWriterBuilder<RegolaSicurezza>().methodName("delete").repository(regolaSicurezzaRepository).build();
+
+    }
+
+    @Bean
+    public Step stepRegoleSicurezza(JobRepository jobRepository, PlatformTransactionManager transactionManager,
+                                RepositoryItemWriter<RegolaSicurezza> writerGroup,
+                                VirtualThreadTaskExecutor taskExecutor) {
+        return new StepBuilder("stepRegoleSicurezza", jobRepository)
+                .<RegolaSicurezza, RegolaSicurezza> chunk(10, transactionManager)
+                .reader(readerStepRegoleSicurezza(null)) //legge le righe della groupMemeber dal db da lavorare
+                 .listener(new RegoleSicurezzaStepExecutionListener())
+                // .listener(new GroupMemeberItemReadListener(groupMemberRepository))
+                // .listener(groupMemberItemProcessListener(null,null,null)) //valorizza i campi della cancellazione
+                // .listener(new GroupMemberItemWriteListener()) //logga la scrittura sul db
+                 .listener(new RegoleSicurezzaSkipListener())
+                // .processor(processorGroup()) //chiama oim
+                .writer(writerRegoleSicurezza())
+                .taskExecutor(taskExecutor)
+                .build();
+    }
 
 }

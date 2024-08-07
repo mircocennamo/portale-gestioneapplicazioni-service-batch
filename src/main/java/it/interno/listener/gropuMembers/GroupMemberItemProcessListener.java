@@ -22,10 +22,14 @@ public class GroupMemberItemProcessListener implements ItemProcessListener<Group
     String utenteCancellazione;
     String ufficioCancellazione;
 
-    public GroupMemberItemProcessListener(GroupMemberRepository groupMemberRepository,String utenteCancellazione,String ufficioCancellazione){
+    Timestamp currentTimeStamp;
+
+    public GroupMemberItemProcessListener(GroupMemberRepository groupMemberRepository,String utenteCancellazione,
+                                          String ufficioCancellazione,Timestamp currentTimeStamp){
         this.groupMemberRepository=groupMemberRepository;
         this.utenteCancellazione=utenteCancellazione;
         this.ufficioCancellazione=ufficioCancellazione;
+        this.currentTimeStamp=currentTimeStamp;
     }
 
         @Override
@@ -37,7 +41,7 @@ public class GroupMemberItemProcessListener implements ItemProcessListener<Group
 
         @Override
         public void afterProcess(GroupMembers item, GroupMembers result) {
-            result.setDataCancellazione(new Timestamp(Instant.now().toEpochMilli()));
+            result.setDataCancellazione(currentTimeStamp);
             result.setUtenteCancellazione(utenteCancellazione);
             result.setUfficioCancellazione(ufficioCancellazione);
             System.out.println("After process request: " + item);

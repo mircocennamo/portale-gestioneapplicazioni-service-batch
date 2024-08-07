@@ -11,7 +11,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @ToString
 @Entity
-@Table(name = "request")
+@Table(name = "REQUEST",schema = "SSD_SECURITY")
 public class Request {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
