@@ -2,6 +2,8 @@ package it.interno.batch;
 
 import it.interno.client.OimClient;
 import it.interno.entity.*;
+import it.interno.listener.JobCompletionNotificationListener;
+import it.interno.listener.RequestStepExecutionListener;
 import it.interno.listener.applicMotivMember.ApplicMotivMemberItemProcessListener;
 import it.interno.listener.applicMotivMember.ApplicMotivMemberItemWriteListener;
 import it.interno.listener.applicMotivMember.ApplicMotivMemberSkipListener;
@@ -11,12 +13,6 @@ import it.interno.listener.applicazione.ApplicazioneItemWriteListener;
 import it.interno.listener.applicazione.ApplicazioneSkipListener;
 import it.interno.listener.applicazione.ApplicazioneStepExecutionListener;
 import it.interno.listener.applicazioneMotivzione.ApplicazioneMotivazioneItemProcessListener;
-import it.interno.listener.applicazioneMotivzione.ApplicazioneMotivazioneItemWriteListener;
-import it.interno.listener.applicazioneMotivzione.ApplicazioneMotivazioneSkipListener;
-import it.interno.listener.applicazioneMotivzione.ApplicazioneMotivazioneStepExecutionListener;
-import it.interno.listener.gropuMembers.GroupMemberStepExecutionListener;
-import it.interno.listener.JobCompletionNotificationListener;
-import it.interno.listener.RequestStepExecutionListener;
 import it.interno.listener.gropuMembers.*;
 import it.interno.listener.group.GroupItemProcessListener;
 import it.interno.listener.group.GroupItemWriteListener;
@@ -33,7 +29,9 @@ import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.builder.JobBuilder;
+import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
+import org.springframework.batch.core.launch.support.TaskExecutorJobLauncher;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.item.data.RepositoryItemReader;
@@ -45,6 +43,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.core.task.VirtualThreadTaskExecutor;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
@@ -102,7 +101,7 @@ public class BatchConfiguration {
                                  Step stepGroupMember,Step stepRegoleSicurezza,Step stepGroups,
                                  Step stepApplicazioneMotivazione,Step stepApplicMotivMember,Step stepApplicazione) {
         return new JobBuilder("deleteApplicationJob", jobRepository)
-               // .incrementer(new RunIdIncrementer())
+                .incrementer(new RunIdIncrementer())
                 .listener(listener)
                 .start(stepRequest).next(stepGroupMember).next(stepRegoleSicurezza)
                 .next(stepGroups).next(stepApplicazioneMotivazione)
@@ -475,5 +474,15 @@ public class BatchConfiguration {
     public ApplicazioneItemProcessListener applicazioneItemProcessListener(@Value(("#{jobParameters['utenteCancellazione']}")) String utenteCancellazione,
                                                                                 @Value(("#{jobParameters['ufficioCancellazione']}")) String ufficioCancellazione, @Value(("#{jobParameters['currentTimeStamp']}")) Timestamp currentTimeStamp) {
         return new ApplicazioneItemProcessListener(utenteCancellazione,ufficioCancellazione,currentTimeStamp);
+    }
+
+
+
+    @Bean(name = "myJobLauncher")
+    public JobLauncher simpleJobLauncher(JobRepository jobRepository){
+        TaskExecutorJobLauncher jobLauncher = new TaskExecutorJobLauncher();
+        jobLauncher.setJobRepository(jobRepository);
+        jobLauncher.setTaskExecutor(new SimpleAsyncTaskExecutor());
+        return jobLauncher;
     }
 }

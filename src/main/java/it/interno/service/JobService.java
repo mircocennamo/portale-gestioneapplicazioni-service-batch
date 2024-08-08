@@ -16,7 +16,7 @@ import java.util.concurrent.ExecutionException;
  */
 public interface JobService {
 
-    Long  deleteApplicationJob(JobParameters jobParameters) ;
+    Long  deleteApplicationJob(JobParameters jobParameters) throws JobInstanceAlreadyCompleteException, JobExecutionAlreadyRunningException, JobParametersInvalidException, JobRestartException;
 
     List<JobParameters> getAllJobs();
 }

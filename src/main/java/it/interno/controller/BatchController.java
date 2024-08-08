@@ -32,7 +32,7 @@ public class BatchController {
     private JobService jobService;
 
     @PostMapping("/start")
-    public ResponseEntity<ResponseDto<JobResponse>> startJob(@RequestBody JobParameters jobParameters)  {
+    public ResponseEntity<ResponseDto<JobResponse>> startJob(@RequestBody JobParameters jobParameters) throws JobInstanceAlreadyCompleteException, JobExecutionAlreadyRunningException, JobParametersInvalidException, JobRestartException {
         Long jobId = jobService.deleteApplicationJob(jobParameters);
 
         return ResponseEntity.ok(ResponseDto.<JobResponse>builder()

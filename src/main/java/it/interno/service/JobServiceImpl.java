@@ -14,6 +14,7 @@ import org.springframework.batch.core.repository.JobExecutionAlreadyRunningExcep
 import org.springframework.batch.core.repository.JobInstanceAlreadyCompleteException;
 import org.springframework.batch.core.repository.JobRestartException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
@@ -34,6 +35,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class JobServiceImpl implements JobService {
 
     @Autowired
+    @Qualifier("myJobLauncher")
     private JobLauncher jobLauncher;
 
     @Autowired
@@ -73,17 +75,17 @@ public class JobServiceImpl implements JobService {
         });
     }
 
-    public  Long  deleteApplicationJob(JobParameters jobParameters) {
-        Long jobId = incrementer.incrementAndGet();
+    public  Long  deleteApplicationJob(JobParameters jobParameters) throws JobInstanceAlreadyCompleteException, JobExecutionAlreadyRunningException, JobParametersInvalidException, JobRestartException {
+        //Long jobId = incrementer.incrementAndGet();
         JobParametersBuilder jobParametersBuilder = new JobParametersBuilder()
-                .addLong(RUN_ID_KEY, jobId)
+                //.addLong(RUN_ID_KEY,  Long.valueOf(5))
                 .addString(APPLICATION_ID,jobParameters.getApplicationId())
                 .addString(UTENTE_CANCELLAZIONE,jobParameters.getUtenteCancellazione())
                 .addString(UFFICIO_CANCELLAZIONE,jobParameters.getUfficioCancellazione())
                 .addDate(CURRENT_TIMESTAMP, ConversionUtils.getCurrentTimestamp());
-
-         callJob(jobParametersBuilder);
-        return jobId;
+        JobExecution jobExecution = jobLauncher.run(batchJob, jobParametersBuilder.toJobParameters());
+        // callJob(jobParametersBuilder);
+        return jobExecution.getJobId();
 
     }
 
