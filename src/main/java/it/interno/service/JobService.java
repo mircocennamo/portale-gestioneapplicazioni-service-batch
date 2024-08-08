@@ -8,6 +8,7 @@ import org.springframework.batch.core.repository.JobInstanceAlreadyCompleteExcep
 import org.springframework.batch.core.repository.JobRestartException;
 
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 /**
  * @author mirco.cennamo on 06/08/2024
@@ -15,7 +16,7 @@ import java.util.List;
  */
 public interface JobService {
 
-    Long  deleteApplicationJob(JobParameters jobParameters) throws JobInstanceAlreadyCompleteException, JobExecutionAlreadyRunningException, JobParametersInvalidException, JobRestartException;
+    Long  deleteApplicationJob(JobParameters jobParameters) ;
 
     List<JobParameters> getAllJobs();
 }

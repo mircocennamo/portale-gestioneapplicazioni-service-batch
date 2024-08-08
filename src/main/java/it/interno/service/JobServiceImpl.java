@@ -22,8 +22,8 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @author mirco.cennamo on 06/08/2024
@@ -42,34 +42,48 @@ public class JobServiceImpl implements JobService {
     @Autowired
     RequestRepository requestRepository;
 
+    private static String RUN_ID_KEY = "run.id";
+    private static String APPLICATION_ID = "applicationId";
+
+    private static String UTENTE_CANCELLAZIONE = "utenteCancellazione";
+
+    private static String UFFICIO_CANCELLAZIONE = "ufficioCancellazione";
+
+    private static String CURRENT_TIMESTAMP = "currentTimeStamp";
 
 
-    public  Long  deleteApplicationJob(JobParameters jobParameters) throws JobInstanceAlreadyCompleteException, JobExecutionAlreadyRunningException, JobParametersInvalidException, JobRestartException {
-        JobParametersBuilder jobParametersBuilder = new JobParametersBuilder()
-                .addString("applicationId",jobParameters.getApplicationId())
-                .addString("utenteCancellazione",jobParameters.getUtenteCancellazione())
-                .addString("ufficioCancellazione",jobParameters.getUfficioCancellazione())
-                .addDate("currentTimeStamp", ConversionUtils.getCurrentTimestamp());
-
-          JobExecution jobExecution = jobLauncher.run(batchJob, jobParametersBuilder.toJobParameters());
-
-        /*ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
-        threadPoolExecutor.execute(new Runnable() {
-            @Override
-            public void run() {
-                try{
+    private final AtomicLong incrementer = new AtomicLong();
 
 
-                    System.out.println("batch Loaded Successfully jobExecution " + jobExecution);
+    ExecutorService executorService = Executors.newFixedThreadPool(10);
 
-                }
-                catch (Exception e){
-                    log.error(e.getMessage(), (Object[]) e.getStackTrace());
-
-                }
+    private Future<JobExecution> callJob(JobParametersBuilder jobParametersBuilder){
+        return executorService.submit(()->{
+            try {
+                return jobLauncher.run(batchJob, jobParametersBuilder.toJobParameters());
+            } catch (JobExecutionAlreadyRunningException e) {
+                throw new RuntimeException(e);
+            } catch (JobRestartException e) {
+                throw new RuntimeException(e);
+            } catch (JobInstanceAlreadyCompleteException e) {
+                throw new RuntimeException(e);
+            } catch (JobParametersInvalidException e) {
+                throw new RuntimeException(e);
             }
-        });*/
-        return jobExecution.getJobId();
+        });
+    }
+
+    public  Long  deleteApplicationJob(JobParameters jobParameters) {
+        Long jobId = incrementer.incrementAndGet();
+        JobParametersBuilder jobParametersBuilder = new JobParametersBuilder()
+                .addLong(RUN_ID_KEY, jobId)
+                .addString(APPLICATION_ID,jobParameters.getApplicationId())
+                .addString(UTENTE_CANCELLAZIONE,jobParameters.getUtenteCancellazione())
+                .addString(UFFICIO_CANCELLAZIONE,jobParameters.getUfficioCancellazione())
+                .addDate(CURRENT_TIMESTAMP, ConversionUtils.getCurrentTimestamp());
+
+         callJob(jobParametersBuilder);
+        return jobId;
 
     }
 

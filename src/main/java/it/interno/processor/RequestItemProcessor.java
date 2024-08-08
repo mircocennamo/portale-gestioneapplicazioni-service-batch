@@ -15,7 +15,7 @@ public class RequestItemProcessor implements ItemProcessor<Request, Request> {
     GroupMemberRepository groupMemberRepository;
 
     @Override
-    public Request process(final Request request) {
+    public Request process(final Request request)  {
         Request transformedRequest;
         String idApplicazione;
         String utenteCancellazione;
@@ -31,7 +31,13 @@ public class RequestItemProcessor implements ItemProcessor<Request, Request> {
         //-------------------------------------------------------------------------------
         transformedRequest = new Request(request.getId(), idApplicazione, utenteCancellazione, ufficioCancellazione, operation, request.getStatus());
         LOGGER.info("Converting ( {} ) into ( {} )", request, transformedRequest);
-        return transformedRequest;
+try{
+    Thread.sleep(20000);
+}catch (InterruptedException e){
+    System.out.println(e);
+}
+
+         return transformedRequest;
     }
 
 

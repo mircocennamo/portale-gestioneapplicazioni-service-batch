@@ -102,7 +102,7 @@ public class BatchConfiguration {
                                  Step stepGroupMember,Step stepRegoleSicurezza,Step stepGroups,
                                  Step stepApplicazioneMotivazione,Step stepApplicMotivMember,Step stepApplicazione) {
         return new JobBuilder("deleteApplicationJob", jobRepository)
-                .incrementer(new RunIdIncrementer())
+               // .incrementer(new RunIdIncrementer())
                 .listener(listener)
                 .start(stepRequest).next(stepGroupMember).next(stepRegoleSicurezza)
                 .next(stepGroups).next(stepApplicazioneMotivazione)

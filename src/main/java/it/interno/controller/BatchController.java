@@ -5,6 +5,7 @@ package it.interno.controller;
  * @project portale-gestioneapplicazioni-service-batch
  */
 import it.interno.domain.JobParameters;
+import it.interno.domain.JobResponse;
 import it.interno.domain.ResponseDto;
 import it.interno.service.JobService;
 import org.springframework.batch.core.JobExecution;
@@ -21,6 +22,7 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 @RestController
 @RequestMapping("/api/batch")
@@ -30,14 +32,12 @@ public class BatchController {
     private JobService jobService;
 
     @PostMapping("/start")
-    public ResponseEntity<ResponseDto<Long>> startJob(@RequestBody JobParameters jobParameters) throws JobInstanceAlreadyCompleteException,
-            JobExecutionAlreadyRunningException, JobParametersInvalidException,
-            JobRestartException {
+    public ResponseEntity<ResponseDto<JobResponse>> startJob(@RequestBody JobParameters jobParameters)  {
         Long jobId = jobService.deleteApplicationJob(jobParameters);
 
-        return ResponseEntity.ok(ResponseDto.<Long>builder()
+        return ResponseEntity.ok(ResponseDto.<JobResponse>builder()
                 .code(HttpStatus.OK.value())
-                .body(jobId)
+                .body(new JobResponse(jobId))
                 .build());
 
     }
