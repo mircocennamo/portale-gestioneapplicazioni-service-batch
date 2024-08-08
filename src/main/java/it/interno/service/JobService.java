@@ -1,6 +1,11 @@
 package it.interno.service;
 
 import it.interno.domain.JobParameters;
+import org.springframework.batch.core.JobExecution;
+import org.springframework.batch.core.JobParametersInvalidException;
+import org.springframework.batch.core.repository.JobExecutionAlreadyRunningException;
+import org.springframework.batch.core.repository.JobInstanceAlreadyCompleteException;
+import org.springframework.batch.core.repository.JobRestartException;
 
 import java.util.List;
 
@@ -10,7 +15,7 @@ import java.util.List;
  */
 public interface JobService {
 
-    void deleteApplicationJob(JobParameters jobParameters);
+    Long  deleteApplicationJob(JobParameters jobParameters) throws JobInstanceAlreadyCompleteException, JobExecutionAlreadyRunningException, JobParametersInvalidException, JobRestartException;
 
     List<JobParameters> getAllJobs();
 }

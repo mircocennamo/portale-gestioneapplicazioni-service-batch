@@ -8,7 +8,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobParametersBuilder;
+import org.springframework.batch.core.JobParametersInvalidException;
 import org.springframework.batch.core.launch.JobLauncher;
+import org.springframework.batch.core.repository.JobExecutionAlreadyRunningException;
+import org.springframework.batch.core.repository.JobInstanceAlreadyCompleteException;
+import org.springframework.batch.core.repository.JobRestartException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -40,21 +44,23 @@ public class JobServiceImpl implements JobService {
 
 
 
-    public  void deleteApplicationJob(JobParameters jobParameters){
+    public  Long  deleteApplicationJob(JobParameters jobParameters) throws JobInstanceAlreadyCompleteException, JobExecutionAlreadyRunningException, JobParametersInvalidException, JobRestartException {
         JobParametersBuilder jobParametersBuilder = new JobParametersBuilder()
                 .addString("applicationId",jobParameters.getApplicationId())
                 .addString("utenteCancellazione",jobParameters.getUtenteCancellazione())
                 .addString("ufficioCancellazione",jobParameters.getUfficioCancellazione())
                 .addDate("currentTimeStamp", ConversionUtils.getCurrentTimestamp());
 
-        ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
+          JobExecution jobExecution = jobLauncher.run(batchJob, jobParametersBuilder.toJobParameters());
+
+        /*ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
         threadPoolExecutor.execute(new Runnable() {
             @Override
             public void run() {
                 try{
 
-                    JobExecution jobExecution = jobLauncher.run(batchJob, jobParametersBuilder.toJobParameters());
-                    log.info("batch Loaded Successfully");
+
+                    System.out.println("batch Loaded Successfully jobExecution " + jobExecution);
 
                 }
                 catch (Exception e){
@@ -62,7 +68,8 @@ public class JobServiceImpl implements JobService {
 
                 }
             }
-        });
+        });*/
+        return jobExecution.getJobId();
 
     }
 
