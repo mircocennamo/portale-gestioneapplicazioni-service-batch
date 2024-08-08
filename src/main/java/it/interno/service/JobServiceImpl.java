@@ -3,6 +3,7 @@ package it.interno.service;
 import it.interno.domain.JobParameters;
 import it.interno.entity.Request;
 import it.interno.repository.RequestRepository;
+import it.interno.utils.ConversionUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobExecution;
@@ -44,7 +45,7 @@ public class JobServiceImpl implements JobService {
                 .addString("applicationId",jobParameters.getApplicationId())
                 .addString("utenteCancellazione",jobParameters.getUtenteCancellazione())
                 .addString("ufficioCancellazione",jobParameters.getUfficioCancellazione())
-                .addDate("currentTimeStamp", getCurrentTimestamp());
+                .addDate("currentTimeStamp", ConversionUtils.getCurrentTimestamp());
 
         ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
         threadPoolExecutor.execute(new Runnable() {
@@ -80,8 +81,5 @@ public class JobServiceImpl implements JobService {
         return parameters;
     }
 
-    static Timestamp getCurrentTimestamp(){
-        ZoneId fusoOrario = ZoneId.of("Europe/Rome");
-        return Timestamp.valueOf(LocalDateTime.now(fusoOrario));
-    }
+
 }

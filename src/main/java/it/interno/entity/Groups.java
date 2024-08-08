@@ -19,7 +19,7 @@ import java.util.Objects;
 @NoArgsConstructor
 @AllArgsConstructor
 @IdClass(GroupsKey.class)
-@DynamicUpdate
+
 public class Groups {
 
     @Id
