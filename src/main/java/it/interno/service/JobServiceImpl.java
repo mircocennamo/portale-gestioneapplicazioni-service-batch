@@ -44,7 +44,7 @@ public class JobServiceImpl implements JobService {
     @Autowired
     RequestRepository requestRepository;
 
-    private static String RUN_ID_KEY = "run.id";
+
     private static String APPLICATION_ID = "applicationId";
 
     private static String UTENTE_CANCELLAZIONE = "utenteCancellazione";
@@ -59,32 +59,17 @@ public class JobServiceImpl implements JobService {
 
     ExecutorService executorService = Executors.newFixedThreadPool(10);
 
-    private Future<JobExecution> callJob(JobParametersBuilder jobParametersBuilder){
-        return executorService.submit(()->{
-            try {
-                return jobLauncher.run(batchJob, jobParametersBuilder.toJobParameters());
-            } catch (JobExecutionAlreadyRunningException e) {
-                throw new RuntimeException(e);
-            } catch (JobRestartException e) {
-                throw new RuntimeException(e);
-            } catch (JobInstanceAlreadyCompleteException e) {
-                throw new RuntimeException(e);
-            } catch (JobParametersInvalidException e) {
-                throw new RuntimeException(e);
-            }
-        });
-    }
+
 
     public  Long  deleteApplicationJob(JobParameters jobParameters) throws JobInstanceAlreadyCompleteException, JobExecutionAlreadyRunningException, JobParametersInvalidException, JobRestartException {
-        //Long jobId = incrementer.incrementAndGet();
+
         JobParametersBuilder jobParametersBuilder = new JobParametersBuilder()
-                //.addLong(RUN_ID_KEY,  Long.valueOf(5))
                 .addString(APPLICATION_ID,jobParameters.getApplicationId())
                 .addString(UTENTE_CANCELLAZIONE,jobParameters.getUtenteCancellazione())
                 .addString(UFFICIO_CANCELLAZIONE,jobParameters.getUfficioCancellazione())
                 .addDate(CURRENT_TIMESTAMP, ConversionUtils.getCurrentTimestamp());
         JobExecution jobExecution = jobLauncher.run(batchJob, jobParametersBuilder.toJobParameters());
-        // callJob(jobParametersBuilder);
+
         return jobExecution.getJobId();
 
     }
