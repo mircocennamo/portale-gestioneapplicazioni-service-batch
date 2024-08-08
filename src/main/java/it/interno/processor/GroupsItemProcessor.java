@@ -6,6 +6,7 @@ import it.interno.entity.GroupsAggregazione;
 import it.interno.repository.GroupsAggregazioneRepository;
 import it.interno.repository.GroupsRepository;
 import it.interno.repository.RuoloQualificaAssegnabilitaRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.item.ItemProcessor;
@@ -15,15 +16,16 @@ import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.List;
 
+@Slf4j
 public class GroupsItemProcessor implements ItemProcessor<Groups, Groups> {
 
    // @Autowired
    // private OimClient oimClient;
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(GroupsItemProcessor.class);
 
 
-    GroupsRepository groupsRepository;
+
+
 
 
     private GroupsAggregazioneRepository groupsAggregazioneRepository;
@@ -40,14 +42,14 @@ public class GroupsItemProcessor implements ItemProcessor<Groups, Groups> {
      private Timestamp currentTimeStamp;
 
 
-    public GroupsItemProcessor(GroupsRepository groupsRepository,
+    public GroupsItemProcessor(
                                GroupsAggregazioneRepository groupsAggregazioneRepository,
                                RuoloQualificaAssegnabilitaRepository ruoloQualificaAssegnabilitaRepository,
                                OimClient oimClient,
                                String utenteCancellazione,
                                String ufficioCancellazione,
                                Timestamp currentTimeStamp){
-        this.groupsRepository=groupsRepository;
+
         this.groupsAggregazioneRepository=groupsAggregazioneRepository;
         this.ruoloQualificaAssegnabilitaRepository=ruoloQualificaAssegnabilitaRepository;
         this.oimClient=oimClient;

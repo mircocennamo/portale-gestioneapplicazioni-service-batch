@@ -25,7 +25,7 @@ public class RequestItemProcessListener implements ItemProcessListener<Request,R
         @Override
         public void beforeProcess(Request item) {
             item.setStatus(Status.RUNNING.getStatus());
-            requestRepository.save(item);
+           // requestRepository.save(item);
             log.debug("After read item: {} " , item);
             System.out.println("RequestItemProcessListener Before process");
         }
@@ -40,7 +40,7 @@ public class RequestItemProcessListener implements ItemProcessListener<Request,R
         @Override
         public void onProcessError(Request item, Exception e) {
             item.setStatus(Status.FAILED.getStatus());
-            requestRepository.save(item);
+            //requestRepository.save(item);
             System.out.println("On process error " + e);
         }
 }

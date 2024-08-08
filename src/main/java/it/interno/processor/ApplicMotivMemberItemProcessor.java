@@ -11,7 +11,7 @@ import java.sql.Timestamp;
 public class ApplicMotivMemberItemProcessor implements ItemProcessor<ApplicMotivMembers, ApplicMotivMembers> {
 
 
-    private ApplicMotivMembersRepository applicMotivMembersRepository;
+
 
     private String utenteCancellazione;
 
@@ -19,9 +19,7 @@ public class ApplicMotivMemberItemProcessor implements ItemProcessor<ApplicMotiv
      private Timestamp currentTimeStamp;
 
 
-    public ApplicMotivMemberItemProcessor(ApplicMotivMembersRepository applicMotivMembersRepository,
-                                          String utenteCancellazione, String ufficioCancellazione, Timestamp currentTimeStamp){
-        this.applicMotivMembersRepository=applicMotivMembersRepository;
+    public ApplicMotivMemberItemProcessor(String utenteCancellazione, String ufficioCancellazione, Timestamp currentTimeStamp){
         this.utenteCancellazione=utenteCancellazione;
         this.ufficioCancellazione=ufficioCancellazione;
         this.currentTimeStamp=currentTimeStamp;
@@ -30,9 +28,7 @@ public class ApplicMotivMemberItemProcessor implements ItemProcessor<ApplicMotiv
     @Override
     public ApplicMotivMembers process(final ApplicMotivMembers applicMotivMembers) {
 
-        applicMotivMembers.setUtenteCancellazione(utenteCancellazione);
-        applicMotivMembers.setUfficioCancellazione(ufficioCancellazione);
-        applicMotivMembers.setDataCancellazione(currentTimeStamp);
+
         return applicMotivMembers;
     }
 

@@ -1,9 +1,7 @@
-package it.interno.listener.group;
+package it.interno.listener.applicazione;
 
-import it.interno.entity.GroupMembers;
-import it.interno.entity.Groups;
-import it.interno.repository.GroupMemberRepository;
-import it.interno.repository.GroupsRepository;
+import it.interno.entity.Applicazione;
+import it.interno.repository.ApplicazioneRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.ItemProcessListener;
 import org.springframework.stereotype.Component;
@@ -16,7 +14,7 @@ import java.sql.Timestamp;
  */
 @Slf4j
 @Component
-public class GroupItemProcessListener implements ItemProcessListener<Groups,Groups> {
+public class ApplicazioneItemProcessListener implements ItemProcessListener<Applicazione,Applicazione> {
 
 
 
@@ -25,22 +23,22 @@ public class GroupItemProcessListener implements ItemProcessListener<Groups,Grou
 
     Timestamp currentTimeStamp;
 
-    public GroupItemProcessListener(String utenteCancellazione,
-                                    String ufficioCancellazione, Timestamp currentTimeStamp){
+    public ApplicazioneItemProcessListener(String utenteCancellazione, String ufficioCancellazione, Timestamp currentTimeStamp){
+
         this.utenteCancellazione=utenteCancellazione;
         this.ufficioCancellazione=ufficioCancellazione;
         this.currentTimeStamp=currentTimeStamp;
     }
 
         @Override
-        public void beforeProcess(Groups item) {
+        public void beforeProcess(Applicazione item) {
 
             log.debug("After read item: {} " , item);
-            System.out.println("GroupItemProcessListener Before process request " + item);
+            System.out.println("ApplicazioneItemProcessListener Before process request " + item);
         }
 
         @Override
-        public void afterProcess(Groups item, Groups result) {
+        public void afterProcess(Applicazione item, Applicazione result) {
             result.setDataCancellazione(currentTimeStamp);
             result.setUtenteCancellazione(utenteCancellazione);
             result.setUfficioCancellazione(ufficioCancellazione);
@@ -51,7 +49,7 @@ public class GroupItemProcessListener implements ItemProcessListener<Groups,Grou
         }
 
         @Override
-        public void onProcessError(Groups item, Exception e) {
+        public void onProcessError(Applicazione item, Exception e) {
             //skip
             System.out.println("On process error " + e);
         }

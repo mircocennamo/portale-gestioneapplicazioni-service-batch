@@ -12,7 +12,7 @@ import java.sql.Timestamp;
 public class ApplicazioneItemProcessor implements ItemProcessor<Applicazione, Applicazione> {
 
 
-    private ApplicazioneRepository applicazioneRepository;
+
 
     private String utenteCancellazione;
 
@@ -20,9 +20,8 @@ public class ApplicazioneItemProcessor implements ItemProcessor<Applicazione, Ap
      private Timestamp currentTimeStamp;
 
 
-    public ApplicazioneItemProcessor(ApplicazioneRepository applicazioneRepository,
-                                     String utenteCancellazione, String ufficioCancellazione, Timestamp currentTimeStamp){
-        this.applicazioneRepository=applicazioneRepository;
+    public ApplicazioneItemProcessor(String utenteCancellazione, String ufficioCancellazione, Timestamp currentTimeStamp){
+
         this.utenteCancellazione=utenteCancellazione;
         this.ufficioCancellazione=ufficioCancellazione;
         this.currentTimeStamp=currentTimeStamp;
@@ -31,10 +30,12 @@ public class ApplicazioneItemProcessor implements ItemProcessor<Applicazione, Ap
     @Override
     public Applicazione process(final Applicazione applicazione) {
 
-        applicazione.setUtenteCancellazione(utenteCancellazione);
+        /*applicazione.setUtenteCancellazione(utenteCancellazione);
         applicazione.setUfficioCancellazione(ufficioCancellazione);
         applicazione.setDataCancellazione(currentTimeStamp);
         applicazione.setAppDataFin(ConversionUtils.timestampToLocalDate(currentTimeStamp));
+
+         */
         return applicazione;
     }
 

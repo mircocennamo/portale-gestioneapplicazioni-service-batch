@@ -15,10 +15,10 @@ import org.springframework.stereotype.Component;
 public class GroupMemeberItemReadListener implements ItemReadListener<GroupMembers> {
 
 
-    GroupMemberRepository groupMemberRepository;
 
-    public GroupMemeberItemReadListener(GroupMemberRepository groupMemberRepository){
-        this.groupMemberRepository=groupMemberRepository;
+
+    public GroupMemeberItemReadListener(){
+
     }
 
     @Override

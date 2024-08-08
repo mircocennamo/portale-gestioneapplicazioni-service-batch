@@ -23,11 +23,10 @@ public class GroupMemberItemProcessor implements ItemProcessor<GroupMembers, Gro
     @Override
     public GroupMembers process(final GroupMembers groupMembers) {
         //chiamo oim per cancellare l'utente dal gruppo
-        GroupMembers g = new GroupMembers(groupMembers.getNomeUtente(),groupMembers.getNomeRuolo());
-        g.setAppId(groupMembers.getAppId());
+
        // oimClient.rimozioneRuoloAUtenti(groupMembers.getNomeRuolo(), Arrays.asList( groupMembers.getNomeUtente()));
 
-        return g;
+        return groupMembers;
     }
 
 

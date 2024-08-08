@@ -18,15 +18,14 @@ import java.time.Instant;
 public class GroupMemberItemProcessListener implements ItemProcessListener<GroupMembers,GroupMembers> {
 
 
-    GroupMemberRepository groupMemberRepository;
+
     String utenteCancellazione;
     String ufficioCancellazione;
 
     Timestamp currentTimeStamp;
 
-    public GroupMemberItemProcessListener(GroupMemberRepository groupMemberRepository,String utenteCancellazione,
+    public GroupMemberItemProcessListener(String utenteCancellazione,
                                           String ufficioCancellazione,Timestamp currentTimeStamp){
-        this.groupMemberRepository=groupMemberRepository;
         this.utenteCancellazione=utenteCancellazione;
         this.ufficioCancellazione=ufficioCancellazione;
         this.currentTimeStamp=currentTimeStamp;
@@ -46,9 +45,7 @@ public class GroupMemberItemProcessListener implements ItemProcessListener<Group
             result.setUfficioCancellazione(ufficioCancellazione);
             System.out.println("After process request: " + item);
             System.out.println("After process groupmember: " + result);
-            groupMemberRepository.save(result);
-
-        }
+         }
 
         @Override
         public void onProcessError(GroupMembers item, Exception e) {

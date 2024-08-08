@@ -1,7 +1,6 @@
 package it.interno.listener.applicazioneMotivzione;
 
 import it.interno.entity.ApplicazioneMotivazione;
-import it.interno.entity.Groups;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.ItemWriteListener;
 import org.springframework.batch.item.Chunk;

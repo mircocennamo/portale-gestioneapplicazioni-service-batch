@@ -15,7 +15,7 @@ import java.sql.Timestamp;
 @NoArgsConstructor
 @AllArgsConstructor
 @IdClass(ApplicazioneMotivazioneKey.class)
-public class ApplicazioneMotivazione {
+public class ApplicazioneMotivazione{
 
     @Id
     @Column(name = "APP_ID")

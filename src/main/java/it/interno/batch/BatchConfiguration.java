@@ -2,12 +2,15 @@ package it.interno.batch;
 
 import it.interno.client.OimClient;
 import it.interno.entity.*;
+import it.interno.listener.applicMotivMember.ApplicMotivMemberItemProcessListener;
 import it.interno.listener.applicMotivMember.ApplicMotivMemberItemWriteListener;
 import it.interno.listener.applicMotivMember.ApplicMotivMemberSkipListener;
 import it.interno.listener.applicMotivMember.ApplicMotivMemberStepExecutionListener;
+import it.interno.listener.applicazione.ApplicazioneItemProcessListener;
 import it.interno.listener.applicazione.ApplicazioneItemWriteListener;
 import it.interno.listener.applicazione.ApplicazioneSkipListener;
 import it.interno.listener.applicazione.ApplicazioneStepExecutionListener;
+import it.interno.listener.applicazioneMotivzione.ApplicazioneMotivazioneItemProcessListener;
 import it.interno.listener.applicazioneMotivzione.ApplicazioneMotivazioneItemWriteListener;
 import it.interno.listener.applicazioneMotivzione.ApplicazioneMotivazioneSkipListener;
 import it.interno.listener.applicazioneMotivzione.ApplicazioneMotivazioneStepExecutionListener;
@@ -136,7 +139,7 @@ public class BatchConfiguration {
     @StepScope
     public  GroupMemberItemProcessListener groupMemberItemProcessListener(@Value(("#{jobParameters['utenteCancellazione']}")) String utenteCancellazione,
                                            @Value(("#{jobParameters['ufficioCancellazione']}")) String ufficioCancellazione,@Value(("#{jobParameters['currentTimeStamp']}")) Timestamp currentTimeStamp) {
-        return new GroupMemberItemProcessListener(groupMemberRepository,utenteCancellazione,ufficioCancellazione,currentTimeStamp);
+        return new GroupMemberItemProcessListener(utenteCancellazione,ufficioCancellazione,currentTimeStamp);
     }
 
 
@@ -151,7 +154,7 @@ public class BatchConfiguration {
     public Step stepRequest(JobRepository jobRepository, PlatformTransactionManager transactionManager,
                       RepositoryItemWriter<Request> writer, VirtualThreadTaskExecutor taskExecutor) {
         return new StepBuilder("stepRequest", jobRepository)
-                .<Request, Request> chunk(10, transactionManager)
+                .<Request, Request> chunk(1, transactionManager)
                 .reader(reader(null)) //legge la riga dal db da lavorare
                 .listener(new RequestStepExecutionListener())
                 .listener(new RequestItemReadListener(requestRepository))
@@ -206,10 +209,10 @@ public class BatchConfiguration {
                                 RepositoryItemWriter<GroupMembers> writerGroupMembers,
                                 VirtualThreadTaskExecutor taskExecutor) {
         return new StepBuilder("stepGroupMember", jobRepository)
-                .<GroupMembers, GroupMembers> chunk(10, transactionManager)
+                .<GroupMembers, GroupMembers> chunk(1, transactionManager)
                 .reader(readerStepGroupMember(null)) //legge le righe della groupMemeber dal db da lavorare
                 .listener(new GroupMemberStepExecutionListener())
-                .listener(new GroupMemeberItemReadListener(groupMemberRepository))
+                .listener(new GroupMemeberItemReadListener())
                 .listener(groupMemberItemProcessListener(null,null,null)) //valorizza i campi della cancellazione
                 .listener(new GroupMemberItemWriteListener()) //logga la scrittura sul db
                 .listener(new GroupMemberSkipListener())
@@ -246,7 +249,7 @@ public class BatchConfiguration {
     public Step stepRegoleSicurezza(JobRepository jobRepository, PlatformTransactionManager transactionManager,
                                 VirtualThreadTaskExecutor taskExecutor) {
         return new StepBuilder("stepRegoleSicurezza", jobRepository)
-                .<RegolaSicurezza, RegolaSicurezza> chunk(10, transactionManager)
+                .<RegolaSicurezza, RegolaSicurezza> chunk(1, transactionManager)
                 .reader(readerStepRegoleSicurezza(null)) //legge le righe della groupMemeber dal db da lavorare
                  .listener(new RegoleSicurezzaStepExecutionListener())
                 // .listener(new GroupMemeberItemReadListener(groupMemberRepository))
@@ -286,7 +289,7 @@ public class BatchConfiguration {
     public Step stepGroups(JobRepository jobRepository, PlatformTransactionManager transactionManager,
                                     VirtualThreadTaskExecutor taskExecutor) {
         return new StepBuilder("stepGroups", jobRepository)
-                .<Groups, Groups> chunk(10, transactionManager)
+                .<Groups, Groups> chunk(1, transactionManager)
                 .reader(readerStepGruppi(null)) //legge le righe della groups dal db da lavorare
                 .listener(new GroupsStepExecutionListener())
                 // .listener(new GroupMemeberItemReadListener(groupMemberRepository))
@@ -303,7 +306,7 @@ public class BatchConfiguration {
     @StepScope
     public GroupItemProcessListener groupItemProcessListener(@Value(("#{jobParameters['utenteCancellazione']}")) String utenteCancellazione,
                                                                    @Value(("#{jobParameters['ufficioCancellazione']}")) String ufficioCancellazione, @Value(("#{jobParameters['currentTimeStamp']}")) Timestamp currentTimeStamp) {
-        return new GroupItemProcessListener(groupsRepository,utenteCancellazione,ufficioCancellazione,currentTimeStamp);
+        return new GroupItemProcessListener(utenteCancellazione,ufficioCancellazione,currentTimeStamp);
     }
 
 
@@ -311,7 +314,7 @@ public class BatchConfiguration {
     @StepScope
     public GroupsItemProcessor processorGroup(@Value(("#{jobParameters['utenteCancellazione']}")) String utenteCancellazione,
                                               @Value(("#{jobParameters['ufficioCancellazione']}")) String ufficioCancellazione, @Value(("#{jobParameters['currentTimeStamp']}")) Timestamp currentTimeStamp) {
-        return new GroupsItemProcessor(groupsRepository,groupsAggregazioneRepository,ruoloQualificaAssegnabilitaRepository,oimClient,utenteCancellazione,ufficioCancellazione,currentTimeStamp);
+        return new GroupsItemProcessor(groupsAggregazioneRepository,ruoloQualificaAssegnabilitaRepository,oimClient,utenteCancellazione,ufficioCancellazione,currentTimeStamp);
     }
 
     //STEP 5 cancellazione applicazioni Motivazione
@@ -338,22 +341,29 @@ public class BatchConfiguration {
 
     @Bean
     @StepScope
-    public ApplicazioneMotivazioneItemProcessor processorApplicazioneMotivazione(@Value(("#{jobParameters['utenteCancellazione']}")) String utenteCancellazione,
-                                              @Value(("#{jobParameters['ufficioCancellazione']}")) String ufficioCancellazione, @Value(("#{jobParameters['currentTimeStamp']}")) Timestamp currentTimeStamp) {
-        return new ApplicazioneMotivazioneItemProcessor(applicazioneMotivazioneRepository,utenteCancellazione,ufficioCancellazione,currentTimeStamp);
+    public ApplicazioneMotivazioneItemProcessor processorApplicazioneMotivazione() {
+        return new ApplicazioneMotivazioneItemProcessor();
+    }
+
+    @Bean(destroyMethod = "")
+    @StepScope
+    public ApplicazioneMotivazioneItemProcessListener applicazioneMotivazioneItemProcessListener(@Value(("#{jobParameters['utenteCancellazione']}")) String utenteCancellazione,
+                                                             @Value(("#{jobParameters['ufficioCancellazione']}")) String ufficioCancellazione, @Value(("#{jobParameters['currentTimeStamp']}")) Timestamp currentTimeStamp) {
+        return new ApplicazioneMotivazioneItemProcessListener(utenteCancellazione,ufficioCancellazione,currentTimeStamp);
     }
 
     @Bean
     public Step stepApplicazioneMotivazione(JobRepository jobRepository, PlatformTransactionManager transactionManager,
                            VirtualThreadTaskExecutor taskExecutor) {
         return new StepBuilder("stepApplicazioneMotivazione", jobRepository)
-                .<ApplicazioneMotivazione, ApplicazioneMotivazione> chunk(10, transactionManager)
+                .<ApplicazioneMotivazione, ApplicazioneMotivazione> chunk(1, transactionManager)
                 .reader(readerStepApplicazioneMotivazione(null)) //legge le righe della tabella APPLICAZIONE MOTIVAZIONE dal db da lavorare
-                .listener(new ApplicazioneMotivazioneStepExecutionListener())
+               // .listener(new ApplicazioneMotivazioneStepExecutionListener())
                 // .listener(new GroupMemeberItemReadListener(groupMemberRepository))
-                .listener(new ApplicazioneMotivazioneItemWriteListener()) //logga la scrittura sul db
-                .listener(new ApplicazioneMotivazioneSkipListener())
-                .processor(processorApplicazioneMotivazione(null,null,null)) //valorizza i campi della cancellazione logica
+                //.listener(new ApplicazioneMotivazioneItemWriteListener()) //logga la scrittura sul db
+               // .listener(new ApplicazioneMotivazioneSkipListener())
+                .listener(applicazioneMotivazioneItemProcessListener(null,null,null)) //valorizza i campi della cancellazione
+                .processor(processorApplicazioneMotivazione()) //valorizza i campi della cancellazione logica
                 .writer(writerApplicazioneMotivazione())
                 .taskExecutor(taskExecutor)
                 .build();
@@ -386,20 +396,29 @@ public class BatchConfiguration {
     public ApplicMotivMemberItemProcessor processorApplicMotivMember(@Value(("#{jobParameters['utenteCancellazione']}")) String utenteCancellazione,
                                                                      @Value(("#{jobParameters['ufficioCancellazione']}")) String ufficioCancellazione,
                                                                      @Value(("#{jobParameters['currentTimeStamp']}")) Timestamp currentTimeStamp) {
-        return new ApplicMotivMemberItemProcessor(applicMotivMembersRepository,utenteCancellazione,ufficioCancellazione,currentTimeStamp);
+        return new ApplicMotivMemberItemProcessor(utenteCancellazione,ufficioCancellazione,currentTimeStamp);
+    }
+
+
+    @Bean(destroyMethod = "")
+    @StepScope
+    public ApplicMotivMemberItemProcessListener applicMotivMemberItemProcessListener(@Value(("#{jobParameters['utenteCancellazione']}")) String utenteCancellazione,
+                                                                                     @Value(("#{jobParameters['ufficioCancellazione']}")) String ufficioCancellazione, @Value(("#{jobParameters['currentTimeStamp']}")) Timestamp currentTimeStamp) {
+        return new ApplicMotivMemberItemProcessListener(utenteCancellazione,ufficioCancellazione,currentTimeStamp);
     }
 
     @Bean
     public Step stepApplicMotivMember(JobRepository jobRepository, PlatformTransactionManager transactionManager,
                                             VirtualThreadTaskExecutor taskExecutor) {
         return new StepBuilder("stepApplicMotivMember", jobRepository)
-                .<ApplicMotivMembers, ApplicMotivMembers> chunk(10, transactionManager)
+                .<ApplicMotivMembers, ApplicMotivMembers> chunk(1, transactionManager)
                 .reader(readerStepApplicMotivMember(null)) //legge le righe della tabella SEC_APPLIC_MOTIV_MEMBERS dal db da lavorare
                 .listener(new ApplicMotivMemberStepExecutionListener())
                 // .listener(new GroupMemeberItemReadListener(groupMemberRepository))
                 .listener(new ApplicMotivMemberItemWriteListener()) //logga la scrittura sul db
                 .listener(new ApplicMotivMemberSkipListener())
-                .processor(processorApplicMotivMember(null,null,null)) //valorizza i campi della cancellazione logica
+                .listener(applicMotivMemberItemProcessListener(null,null,null)) //valorizza i campi della cancellazione logica
+                .processor(processorApplicMotivMember(null,null,null))
                 .writer(writerApplicMotivMember())
                 .taskExecutor(taskExecutor)
                 .build();
@@ -431,23 +450,30 @@ public class BatchConfiguration {
     public ApplicazioneItemProcessor processorApplicazione(@Value(("#{jobParameters['utenteCancellazione']}")) String utenteCancellazione,
                                                                      @Value(("#{jobParameters['ufficioCancellazione']}")) String ufficioCancellazione,
                                                                      @Value(("#{jobParameters['currentTimeStamp']}")) Timestamp currentTimeStamp) {
-        return new ApplicazioneItemProcessor(applicazioneRepository,utenteCancellazione,ufficioCancellazione,currentTimeStamp);
+        return new ApplicazioneItemProcessor(utenteCancellazione,ufficioCancellazione,currentTimeStamp);
     }
 
     @Bean
     public Step stepApplicazione(JobRepository jobRepository, PlatformTransactionManager transactionManager,
                                       VirtualThreadTaskExecutor taskExecutor) {
         return new StepBuilder("stepApplicazione", jobRepository)
-                .<Applicazione, Applicazione> chunk(10, transactionManager)
+                .<Applicazione, Applicazione> chunk(1, transactionManager)
                 .reader(readerStepApplicazione(null)) //legge la riga della tabella SEC_APPLICAZIONE dal db da lavorare
                 .listener(new ApplicazioneStepExecutionListener())
-                // .listener(new GroupMemeberItemReadListener(groupMemberRepository))
                 .listener(new ApplicazioneItemWriteListener()) //logga la scrittura sul db
                 .listener(new ApplicazioneSkipListener())
+                .listener(applicazioneItemProcessListener(null,null,null)) //valorizza i campi della cancellazione logica
                 .processor(processorApplicazione(null,null,null)) //valorizza i campi della cancellazione logica
                 .writer(writerApplicazione())
                 .taskExecutor(taskExecutor)
                 .build();
     }
 
+
+    @Bean(destroyMethod = "")
+    @StepScope
+    public ApplicazioneItemProcessListener applicazioneItemProcessListener(@Value(("#{jobParameters['utenteCancellazione']}")) String utenteCancellazione,
+                                                                                @Value(("#{jobParameters['ufficioCancellazione']}")) String ufficioCancellazione, @Value(("#{jobParameters['currentTimeStamp']}")) Timestamp currentTimeStamp) {
+        return new ApplicazioneItemProcessListener(utenteCancellazione,ufficioCancellazione,currentTimeStamp);
+    }
 }
