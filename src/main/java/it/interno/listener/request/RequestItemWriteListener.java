@@ -15,18 +15,18 @@ import org.springframework.stereotype.Component;
 public class RequestItemWriteListener implements ItemWriteListener<Request>{
     @Override
     public void beforeWrite(Chunk<? extends Request> items) {
-        log.info("Writing started Request list : " + items);
+        log.info("RequestItemWriteListener Writing started Request list : {} " , items);
     }
 
     @Override
     public void afterWrite(Chunk<? extends Request> items) {
-        log.info("Writing completed Request list : " + items);
+        log.info("RequestItemWriteListener Writing completed Request list : {} " , items);
         ;
     }
 
     @Override
     public void onWriteError(Exception e, Chunk<? extends Request> items) {
-        log.error("Error in reading the Request records " + items);
-        log.error("Error in reading the Request records " + e);
+        log.error("RequestItemWriteListener Error in reading the Request records {} " ,  items);
+        log.error("RequestItemWriteListener Error in reading the Request records {} " , e);
     }
 }

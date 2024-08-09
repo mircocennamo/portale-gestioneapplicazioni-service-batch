@@ -15,18 +15,18 @@ import org.springframework.stereotype.Component;
 public class GroupMemberItemWriteListener implements ItemWriteListener<GroupMembers>{
     @Override
     public void beforeWrite(Chunk<? extends GroupMembers> items) {
-        log.info("Writing started Request list : " + items);
+        log.info("GroupMemberItemWriteListener Writing started Request list : {} " , items);
     }
 
     @Override
     public void afterWrite(Chunk<? extends GroupMembers> items) {
-        log.info("Writing completed Request list : " + items);
+        log.info("GroupMemberItemWriteListener Writing completed Request list : {} " , items);
         ;
     }
 
     @Override
     public void onWriteError(Exception e, Chunk<? extends GroupMembers> items) {
-        log.error("Error in reading the Request records " + items);
-        log.error("Error in reading the Request records " + e);
+        log.info("GroupMemberItemWriteListener Error in reading the Request records {} " , items);
+        log.info("GroupMemberItemWriteListener Error in reading the Request records {} " , e);
     }
 }

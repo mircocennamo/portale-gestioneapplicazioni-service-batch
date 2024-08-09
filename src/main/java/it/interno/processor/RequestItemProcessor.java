@@ -31,11 +31,13 @@ public class RequestItemProcessor implements ItemProcessor<Request, Request> {
         //-------------------------------------------------------------------------------
         transformedRequest = new Request(request.getId(), idApplicazione, utenteCancellazione, ufficioCancellazione, operation, request.getStatus());
         LOGGER.info("Converting ( {} ) into ( {} )", request, transformedRequest);
-try{
+/*try{
     Thread.sleep(20000);
 }catch (InterruptedException e){
     System.out.println(e);
 }
+
+ */
 
          return transformedRequest;
     }

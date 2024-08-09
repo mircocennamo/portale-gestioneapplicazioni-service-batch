@@ -8,6 +8,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+import java.util.List;
+
 public interface GroupsRepository extends JpaRepository<Groups, GroupsKey> {
 
     @Query(value ="SELECT g.* FROM SSD_SECURITY.GROUPS g WHERE g.G_APP = ?1 AND g.DATA_CAN IS NULL ORDER BY g.G_NAME DESC",
@@ -15,6 +17,10 @@ public interface GroupsRepository extends JpaRepository<Groups, GroupsKey> {
             nativeQuery = true)
     Page<Groups> findAllByAppId(String appId, Pageable pageable);
 
+
+    @Query(value ="SELECT g.* FROM SSD_SECURITY.GROUPS g WHERE g.G_APP = ?1 AND g.DATA_CAN IS NULL ORDER BY g.G_NAME DESC",
+            nativeQuery = true)
+    List<Groups> findAllByAppId(String appId);
 
 }
 

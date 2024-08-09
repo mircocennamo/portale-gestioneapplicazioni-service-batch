@@ -19,37 +19,26 @@ public class GroupMemberItemProcessListener implements ItemProcessListener<Group
 
 
 
-    String utenteCancellazione;
-    String ufficioCancellazione;
 
-    Timestamp currentTimeStamp;
-
-    public GroupMemberItemProcessListener(String utenteCancellazione,
-                                          String ufficioCancellazione,Timestamp currentTimeStamp){
-        this.utenteCancellazione=utenteCancellazione;
-        this.ufficioCancellazione=ufficioCancellazione;
-        this.currentTimeStamp=currentTimeStamp;
-    }
+    public GroupMemberItemProcessListener(){}
 
         @Override
         public void beforeProcess(GroupMembers item) {
 
-            log.debug("After read item: {} " , item);
-            System.out.println("RequestItemProcessListener Before process request " + item);
+            log.debug("GroupMemberItemProcessListener After read item: {} " , item);
+            log.debug("GroupMemberItemProcessListener Before process request {} " , item);
         }
 
         @Override
         public void afterProcess(GroupMembers item, GroupMembers result) {
-            result.setDataCancellazione(currentTimeStamp);
-            result.setUtenteCancellazione(utenteCancellazione);
-            result.setUfficioCancellazione(ufficioCancellazione);
-            System.out.println("After process request: " + item);
-            System.out.println("After process groupmember: " + result);
+
+            log.debug("GroupMemberItemProcessListener After process request: {} " , item);
+            log.debug("GroupMemberItemProcessListener After process groupmember: {} " , result);
          }
 
         @Override
         public void onProcessError(GroupMembers item, Exception e) {
             //skip
-            System.out.println("On process error " + e);
+            log.debug("GroupMemberItemProcessListener On process error {} " , e);
         }
 }
