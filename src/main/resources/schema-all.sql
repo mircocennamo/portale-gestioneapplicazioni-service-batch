@@ -15,8 +15,27 @@
 --status = 3 lavorato ok
 --status = 4 lavorato ko
 
-insert into SSD_SECURITY.REQUEST   (idApplicazione, utenteCancellazione, ufficioCancellazione, operation,status) values ('12', 'mirco1', 'ufficiomio', 'delete',1);
-insert into SSD_SECURITY.REQUEST   (idApplicazione, utenteCancellazione, ufficioCancellazione, operation,status) values ('13', 'mirco2', 'ufficiomio', 'delete',1);
+insert into SSD_SECURITY.REQUEST   (idApplicazione, utenteCancellazione, ufficioCancellazione, operation,status) values ('12', 'mirco1', 'ufficiomio', 'DELETE_APP','TO_BE_ASSIGNED');
+insert into SSD_SECURITY.REQUEST   (idApplicazione, utenteCancellazione, ufficioCancellazione, operation,status) values ('13', 'mirco2', 'ufficiomio', 'DELETE_ALL_GROUPS','TO_BE_ASSIGNED');
+
+insert into SSD_SECURITY.REQUEST   (idApplicazione, utenteCancellazione, ufficioCancellazione, operation,status) values ('14', 'mirco1', 'ufficiomio', 'DELETE_APP','TO_BE_ASSIGNED');
+insert into SSD_SECURITY.REQUEST   (idApplicazione, utenteCancellazione, ufficioCancellazione, operation,status) values ('15', 'mirco2', 'ufficiomio', 'DELETE_APP','TO_BE_ASSIGNED');
+
+insert into SSD_SECURITY.REQUEST   (idApplicazione, utenteCancellazione, ufficioCancellazione, operation,status) values ('16', 'mirco1', 'ufficiomio', 'DELETE_APP','TO_BE_ASSIGNED');
+insert into SSD_SECURITY.REQUEST   (idApplicazione, utenteCancellazione, ufficioCancellazione, operation,status) values ('17', 'mirco2', 'ufficiomio', 'DELETE_APP','TO_BE_ASSIGNED');
+
+insert into SSD_SECURITY.REQUEST   (idApplicazione, utenteCancellazione, ufficioCancellazione, operation,status) values ('18', 'mirco1', 'ufficiomio', 'DELETE_APP','TO_BE_ASSIGNED');
+insert into SSD_SECURITY.REQUEST   (idApplicazione, utenteCancellazione, ufficioCancellazione, operation,status) values ('19', 'mirco2', 'ufficiomio', 'DELETE_APP','TO_BE_ASSIGNED');
+
+insert into SSD_SECURITY.REQUEST   (idApplicazione, utenteCancellazione, ufficioCancellazione, operation,status) values ('20', 'mirco1', 'ufficiomio', 'DELETE_APP','TO_BE_ASSIGNED');
+insert into SSD_SECURITY.REQUEST   (idApplicazione, utenteCancellazione, ufficioCancellazione, operation,status) values ('21', 'mirco2', 'ufficiomio', 'DELETE_APP','TO_BE_ASSIGNED');
+
+insert into SSD_SECURITY.REQUEST   (idApplicazione, utenteCancellazione, ufficioCancellazione, operation,status) values ('22', 'mirco1', 'ufficiomio', 'DELETE_APP','TO_BE_ASSIGNED');
+insert into SSD_SECURITY.REQUEST   (idApplicazione, utenteCancellazione, ufficioCancellazione, operation,status) values ('23', 'mirco2', 'ufficiomio', 'DELETE_APP','TO_BE_ASSIGNED');
+
+insert into SSD_SECURITY.REQUEST   (idApplicazione, utenteCancellazione, ufficioCancellazione, operation,status) values ('23', 'mirco2', 'ufficiomio', 'OTHER','TO_BE_ASSIGNED');
+
+
 --insert into request   (idApplicazione, utenteCancellazione, ufficioCancellazione, operation,status) values ('14', 'mirco3', 'ufficiomio', 'delete',1);
 --insert into request   (idApplicazione, utenteCancellazione, ufficioCancellazione, operation,status) values ('15', 'mirco4', 'ufficiomio', 'delete',1);
 

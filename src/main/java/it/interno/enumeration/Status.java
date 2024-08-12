@@ -5,12 +5,8 @@ package it.interno.enumeration;
  * @project portale-gestioneapplicazioni-service-batch
  */
 public enum Status {
-    TO_WORK ("1"),
-    STARTED ("2"),
-    RUNNING("3"),
-    COMPLETED("4"),
-    FAILED("5"),
-    STOPPED("6");
+    TO_BE_ASSIGNED("TO_BE_ASSIGNED"),
+    ASSIGNED("ASSIGNED");
 
     private String status;
 
@@ -18,9 +14,9 @@ public enum Status {
         this.status = status;
     }
 
-    public static Status fromNumber(String number) {
+    public static Status fromValue(String number) {
         for (Status status : Status.values()) {
-            if (status.name().equals(number)) {
+            if (status.getStatus().equals(number)) {
                 return status;
             }
         }

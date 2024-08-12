@@ -16,10 +16,10 @@ import org.springframework.stereotype.Component;
 public class RequestItemReadListener implements ItemReadListener<Request> {
 
 
-    RequestRepository requestRepository;
 
-    public RequestItemReadListener(RequestRepository requestRepository){
-        this.requestRepository=requestRepository;
+
+    public RequestItemReadListener(){
+
     }
 
     @Override
@@ -29,8 +29,7 @@ public class RequestItemReadListener implements ItemReadListener<Request> {
 
     @Override
     public void afterRead(Request item) {
-        item.setStatus(Status.STARTED.getStatus());
-        requestRepository.save(item);
+
         log.debug("After read item: {} " , item);
     }
 

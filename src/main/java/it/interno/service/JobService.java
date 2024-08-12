@@ -1,6 +1,9 @@
 package it.interno.service;
 
 import it.interno.domain.JobParameters;
+import it.interno.entity.Request;
+import it.interno.enumeration.Operation;
+import it.interno.enumeration.Status;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobParametersInvalidException;
 import org.springframework.batch.core.repository.JobExecutionAlreadyRunningException;
@@ -18,5 +21,7 @@ public interface JobService {
 
     Long  deleteApplicationJob(JobParameters jobParameters) throws JobInstanceAlreadyCompleteException, JobExecutionAlreadyRunningException, JobParametersInvalidException, JobRestartException;
 
-    List<JobParameters> getAllJobs();
+    List<Request> getAllJobs(Status status, Operation operation);
+
+    Long deleteAllGroupsJob(JobParameters jobParameters) throws JobInstanceAlreadyCompleteException, JobExecutionAlreadyRunningException, JobParametersInvalidException, JobRestartException;
 }

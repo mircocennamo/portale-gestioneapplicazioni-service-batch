@@ -2,6 +2,8 @@ package it.interno.service;
 
 import it.interno.domain.JobParameters;
 import it.interno.entity.Request;
+import it.interno.enumeration.Operation;
+import it.interno.enumeration.Status;
 import it.interno.repository.RequestRepository;
 import it.interno.utils.ConversionUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -15,13 +17,9 @@ import org.springframework.batch.core.repository.JobInstanceAlreadyCompleteExcep
 import org.springframework.batch.core.repository.JobRestartException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
@@ -35,11 +33,16 @@ import java.util.concurrent.atomic.AtomicLong;
 public class JobServiceImpl implements JobService {
 
     @Autowired
-    @Qualifier("myJobLauncher")
+    @Qualifier("asyncJobLauncher")
     private JobLauncher jobLauncher;
 
     @Autowired
-    private Job batchJob;
+    @Qualifier("JOB_DELETE_APPLICATION_BATCH")
+    private Job batchDeleteApplicationJob;
+
+    @Autowired
+    @Qualifier("JOB_DELETE_ALL_GROUPS_BATCH")
+    private Job batchDeleteAllGroupsJob;
 
     @Autowired
     RequestRepository requestRepository;
@@ -61,6 +64,8 @@ public class JobServiceImpl implements JobService {
 
 
 
+
+    //@Scheduled(fixedRate = 5000)
     public  Long  deleteApplicationJob(JobParameters jobParameters) throws JobInstanceAlreadyCompleteException, JobExecutionAlreadyRunningException, JobParametersInvalidException, JobRestartException {
 
         JobParametersBuilder jobParametersBuilder = new JobParametersBuilder()
@@ -68,25 +73,35 @@ public class JobServiceImpl implements JobService {
                 .addString(UTENTE_CANCELLAZIONE,jobParameters.getUtenteCancellazione())
                 .addString(UFFICIO_CANCELLAZIONE,jobParameters.getUfficioCancellazione())
                 .addDate(CURRENT_TIMESTAMP, ConversionUtils.getCurrentTimestamp());
-        JobExecution jobExecution = jobLauncher.run(batchJob, jobParametersBuilder.toJobParameters());
+        JobExecution jobExecution = jobLauncher.run(batchDeleteApplicationJob, jobParametersBuilder.toJobParameters());
 
         return jobExecution.getJobId();
 
     }
 
     @Override
-    public List<JobParameters> getAllJobs() {
-        List<Request> requestList = requestRepository.findRequestByStatus("1");
-        List<JobParameters> parameters = new ArrayList<>();
-        requestList.stream().forEach(request -> {
-            JobParameters jobParameters = new JobParameters();
-            jobParameters.setApplicationId(request.getIdApplicazione());
-            parameters.add(jobParameters);
-        });
+    public List<Request> getAllJobs(Status status, Operation operation) {
+        if(status == null && operation == null)
+            return requestRepository.findAll();
+        else if (status == null) {
+            return requestRepository.findRequestByOperation(operation.getOperation());
+        } else if (operation == null) {
+            return requestRepository.findRequestByStatus(status.getStatus());
 
+        }
+        return requestRepository.findRequestByStatusAndOperation(status.getStatus(),operation.getOperation());
+    }
 
+    @Override
+    public Long deleteAllGroupsJob(JobParameters jobParameters) throws JobInstanceAlreadyCompleteException, JobExecutionAlreadyRunningException, JobParametersInvalidException, JobRestartException {
+        JobParametersBuilder jobParametersBuilder = new JobParametersBuilder()
+                .addString(APPLICATION_ID,jobParameters.getApplicationId())
+                .addString(UTENTE_CANCELLAZIONE,jobParameters.getUtenteCancellazione())
+                .addString(UFFICIO_CANCELLAZIONE,jobParameters.getUfficioCancellazione())
+                .addDate(CURRENT_TIMESTAMP, ConversionUtils.getCurrentTimestamp());
+        JobExecution jobExecution = jobLauncher.run(batchDeleteAllGroupsJob, jobParametersBuilder.toJobParameters());
 
-        return parameters;
+        return jobExecution.getJobId();
     }
 
 

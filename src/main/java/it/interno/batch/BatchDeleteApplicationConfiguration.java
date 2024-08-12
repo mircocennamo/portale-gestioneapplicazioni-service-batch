@@ -2,6 +2,8 @@ package it.interno.batch;
 
 import it.interno.client.OimClient;
 import it.interno.entity.*;
+import it.interno.enumeration.Operation;
+import it.interno.enumeration.Status;
 import it.interno.listener.JobCompletionNotificationListener;
 import it.interno.listener.RequestStepExecutionListener;
 import it.interno.listener.applicMotivMember.ApplicMotivMemberItemProcessListener;
@@ -58,7 +60,7 @@ import java.util.Map;
 @Configuration
 @EnableJpaRepositories("it.interno.repository")
 @EntityScan("it.interno.entity")
-public class BatchConfiguration {
+public class BatchDeleteApplicationConfiguration {
 
     @Autowired
     RequestRepository requestRepository;
@@ -96,8 +98,10 @@ public class BatchConfiguration {
     //  return new VirtualThreadTaskExecutor("virtual-thread-executor");
     // }
 
+    public static final String JOB_DELETE_APPLICATION_BATCH = "JOB_DELETE_APPLICATION_BATCH";
 
-    @Bean
+
+    @Bean(name = JOB_DELETE_APPLICATION_BATCH)
     public Job deleteApplication(JobRepository jobRepository, JobCompletionNotificationListener listener, Step stepRequest,Step stepDeleteOim,
                                  Step stepGroupMember,Step stepRegoleSicurezza,Step stepGroups,
                                  Step stepApplicazioneMotivazione,Step stepApplicMotivMember,Step stepApplicazione) {
@@ -126,8 +130,8 @@ public class BatchConfiguration {
         sortMap.put("id", Sort.Direction.DESC);
         return new RepositoryItemReaderBuilder<Request>()
                 .repository(requestRepository)
-                .methodName("findRequestByStatusAndIdApp")
-                .arguments(Arrays.asList("1",applicationId))
+                .methodName("findRequestByStatusAndIdAppAndOperation")
+                .arguments(Arrays.asList(Status.TO_BE_ASSIGNED.getStatus(),applicationId, Operation.DELETE_APP.getOperation()))
                 .sorts(sortMap)
                 .saveState(false)
                 .build();
@@ -160,8 +164,8 @@ public class BatchConfiguration {
                 .<Request, Request> chunk(20, transactionManager)
                 .reader(reader(null)) //legge la riga dal db da lavorare
                 .listener(new RequestStepExecutionListener())
-                .listener(new RequestItemReadListener(requestRepository))
-                .listener(new RequestItemProcessListener(requestRepository))
+                .listener(new RequestItemReadListener())
+                .listener(new RequestItemProcessListener())
                 .listener(new RequestItemWriteListener())
                 .processor(processor())
                 .writer(writer)
@@ -545,7 +549,7 @@ public class BatchConfiguration {
 
 
 
-    @Bean(name = "myJobLauncher")
+    @Bean(name = "asyncJobLauncher")
     public JobLauncher simpleJobLauncher(JobRepository jobRepository){
         TaskExecutorJobLauncher jobLauncher = new TaskExecutorJobLauncher();
         jobLauncher.setJobRepository(jobRepository);

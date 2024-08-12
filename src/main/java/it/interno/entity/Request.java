@@ -19,17 +19,20 @@ public class Request {
     private Long id;
 
 
-    @Column(name = "IDAPPLICAZIONE", nullable = false)
+    @Column(name = "IDAPPLICAZIONE")
     private String idApplicazione;
-    @Column(name = "UTENTECANCELLAZIONE", nullable = false)
+    @Column(name = "UTENTECANCELLAZIONE")
     private String utenteCancellazione;
-    @Column(name = "UFFICIOCANCELLAZIONE", nullable = false)
+    @Column(name = "UFFICIOCANCELLAZIONE")
     private String ufficioCancellazione;
-    @Column(name = "OPERATION", nullable = false)
+    @Column(name = "OPERATION")
     private String operation;
 
-    @Column(name = "STATUS", nullable = false)
+    @Column(name = "STATUS")
     private String status;
+
+    @Column(name = "JOB_ID")
+    private Long jobId;
 
 
 

@@ -4,6 +4,8 @@ import it.interno.entity.Request;
 import it.interno.repository.GroupMemberRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.batch.core.StepExecution;
+import org.springframework.batch.core.annotation.BeforeStep;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -14,23 +16,20 @@ public class RequestItemProcessor implements ItemProcessor<Request, Request> {
     @Autowired
     GroupMemberRepository groupMemberRepository;
 
+    private long jobExecutionId;
+
+    @BeforeStep
+    public void beforeStep(StepExecution stepExecution) {
+        jobExecutionId = stepExecution.getJobExecutionId();
+    }
+
     @Override
     public Request process(final Request request)  {
-        Request transformedRequest;
-        String idApplicazione;
-        String utenteCancellazione;
-        String ufficioCancellazione;
-        String operation;
 
-
-        idApplicazione = request.getIdApplicazione().toUpperCase();
-        utenteCancellazione = request.getUtenteCancellazione().toUpperCase();
-        ufficioCancellazione = request.getUfficioCancellazione().toUpperCase();
-        operation = request.getOperation().toUpperCase();
-
+        request.setJobId(jobExecutionId);
         //-------------------------------------------------------------------------------
-        transformedRequest = new Request(request.getId(), idApplicazione, utenteCancellazione, ufficioCancellazione, operation, request.getStatus());
-        LOGGER.info("Converting ( {} ) into ( {} )", request, transformedRequest);
+
+        LOGGER.info("set request {} jobExecutionId {} ", request, jobExecutionId);
 /*try{
     Thread.sleep(20000);
 }catch (InterruptedException e){
@@ -39,7 +38,9 @@ public class RequestItemProcessor implements ItemProcessor<Request, Request> {
 
  */
 
-         return transformedRequest;
+
+
+         return request;
     }
 
 
