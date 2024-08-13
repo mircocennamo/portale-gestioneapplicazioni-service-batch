@@ -46,7 +46,8 @@ public class BatchDeleteGroupsConfiguration {
 
 
     @Bean(name = JOB_DELETE_ALL_GROUPS_BATCH)
-    public Job deleteApplication(JobRepository jobRepository, JobCompletionNotificationListener listener, Step stepRequestDeleteGropus,Step stepDeleteOim,
+    public Job deleteApplication(JobRepository jobRepository, JobCompletionNotificationListener listener, Step stepRequestDeleteGropus,
+                                 Step stepDeleteOim,Step stepApplicMotivMember,
                                  Step stepGroupMember,Step stepRegoleSicurezza,Step stepGroups) {
         return new JobBuilder("deleteAllGroupsJob", jobRepository)
                 .incrementer(new RunIdIncrementer())
@@ -54,6 +55,7 @@ public class BatchDeleteGroupsConfiguration {
                 .start(stepRequestDeleteGropus).next(stepDeleteOim)
                 .next(stepGroupMember).next(stepGroups)
                 .next(stepRegoleSicurezza)
+                .next(stepApplicMotivMember)
                 .build();
     }
 
