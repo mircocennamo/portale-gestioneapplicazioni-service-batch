@@ -10,10 +10,7 @@ import it.interno.listener.applicMotivMember.ApplicMotivMemberItemProcessListene
 import it.interno.listener.applicMotivMember.ApplicMotivMemberItemWriteListener;
 import it.interno.listener.applicMotivMember.ApplicMotivMemberSkipListener;
 import it.interno.listener.applicMotivMember.ApplicMotivMemberStepExecutionListener;
-import it.interno.listener.applicazione.ApplicazioneItemProcessListener;
-import it.interno.listener.applicazione.ApplicazioneItemWriteListener;
-import it.interno.listener.applicazione.ApplicazioneSkipListener;
-import it.interno.listener.applicazione.ApplicazioneStepExecutionListener;
+import it.interno.listener.applicazione.*;
 import it.interno.listener.applicazioneMotivzione.ApplicazioneMotivazioneItemProcessListener;
 import it.interno.listener.gropuMembers.*;
 import it.interno.listener.group.GroupItemProcessListener;
@@ -50,8 +47,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.retry.backoff.ExponentialBackOffPolicy;
 import org.springframework.transaction.PlatformTransactionManager;
 
+import java.net.http.HttpConnectTimeoutException;
 import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -93,23 +92,28 @@ public class BatchDeleteApplicationConfiguration {
     ApplicazioneRepository applicazioneRepository;
 
 
-    //@Bean
-    //public VirtualThreadTaskExecutor taskExecutor() {
-    //  return new VirtualThreadTaskExecutor("virtual-thread-executor");
-    // }
+
 
     public static final String JOB_DELETE_APPLICATION_BATCH = "JOB_DELETE_APPLICATION_BATCH";
 
 
     @Bean(name = JOB_DELETE_APPLICATION_BATCH)
-    public Job deleteApplication(JobRepository jobRepository, JobCompletionNotificationListener listener, Step stepRequest,Step stepDeleteOim,
-                                 Step stepGroupMember,Step stepRegoleSicurezza,Step stepGroups,
-                                 Step stepApplicazioneMotivazione,Step stepApplicMotivMember,Step stepApplicazione) {
+    public Job deleteApplication(JobRepository jobRepository, JobCompletionNotificationListener JobCompletionNotificationListener,
+                                 Step stepRequest,
+                                 Step stepDeleteRuoliOim,
+                                 Step stepRimozioneRuoloAUtenteOim, //rimozioneRuoloAUtenti
+                                 Step stepRegoleSicurezza,
+                                 Step stepGroups,
+                                 Step stepApplicazioneMotivazione,
+                                 Step stepApplicMotivMember,
+                                 Step stepApplicazione) {
         return new JobBuilder("deleteApplicationJob", jobRepository)
                 .incrementer(new RunIdIncrementer())
-                .listener(listener)
-                .start(stepRequest).next(stepDeleteOim)
-                .next(stepGroupMember).next(stepGroups)
+                .listener(JobCompletionNotificationListener)
+                .start(stepRequest)
+                .next(stepDeleteRuoliOim)
+                .next(stepRimozioneRuoloAUtenteOim)
+                .next(stepGroups)
                 .next(stepRegoleSicurezza)
                 .next(stepApplicazioneMotivazione)
                 .next(stepApplicMotivMember)
@@ -188,23 +192,34 @@ public class BatchDeleteApplicationConfiguration {
     }
 
 
+
+    //retry nel caso di ConnectionTimeOut con 3 tentativi
     @Bean
-    public Step stepDeleteOim(JobRepository jobRepository, PlatformTransactionManager transactionManager,
-                              RepositoryItemWriter<Groups> writerGroupMembers
+    public Step stepDeleteRuoliOim(JobRepository jobRepository, PlatformTransactionManager transactionManager,
+                                   RepositoryItemWriter<Groups> writerGroupMembers
     ) {
 
-        return new StepBuilder("stepDeleteOim", jobRepository)
+        return new StepBuilder("stepDeleteRuoliOim", jobRepository)
                 .<Groups, Groups> chunk(20, transactionManager)
 
                 .reader(readerStepGruppi(null)) //legge le righe della groups dal db da lavorare
 
-                .processor(processorDeleteRuoliOim(null)) //chiama oim e valorizza i campi della cancellazione
+                .processor(processorDeleteRuoliOim(null)) //chiama oim
                 .writer(new ItemWriter<Groups>() {
                     @Override
                     public void write(Chunk<? extends Groups> chunk) throws Exception {
                         //do nothing
                     }
                 })
+                .faultTolerant()
+                .retryLimit(3)
+                .retry(HttpConnectTimeoutException.class)
+                .backOffPolicy(new ExponentialBackOffPolicy())
+                .listener(new RetryOimListener())
+                .skipLimit(10)
+                .skip(Exception.class)
+                .listener(new SkipOimListener())
+
                 //  .taskExecutor(taskExecutor)
                 // .transactionAttribute(attribute)
                 .build();
@@ -268,14 +283,11 @@ public class BatchDeleteApplicationConfiguration {
 
 
     @Bean
-    public Step stepGroupMember(JobRepository jobRepository, PlatformTransactionManager transactionManager,
-                                RepositoryItemWriter<GroupMembers> writerGroupMembers
+    public Step stepRimozioneRuoloAUtenteOim(JobRepository jobRepository, PlatformTransactionManager transactionManager,
+                                             RepositoryItemWriter<GroupMembers> writerGroupMembers
     ) {
-        // DefaultTransactionAttribute attribute = new DefaultTransactionAttribute();
-        // attribute.setPropagationBehavior(Propagation.REQUIRES_NEW.value());
-        // attribute.setIsolationLevel(Isolation.DEFAULT.value());
-        // attribute.setTimeout(30);
-        return new StepBuilder("stepGroupMember", jobRepository)
+
+        return new StepBuilder("stepRimozioneRuoloAUtenteOim", jobRepository)
                 .<GroupMembers, GroupMembers> chunk(20, transactionManager)
 
                 .reader(readerStepGroupMember(null)) //legge le righe della groupMemeber dal db da lavorare
@@ -284,10 +296,17 @@ public class BatchDeleteApplicationConfiguration {
                 .listener(groupMemberItemProcessListener()) //
                 .listener(new GroupMemberItemWriteListener()) //logga la scrittura sul db
                 .listener(new GroupMemberSkipListener())
-                .processor(processorGroupMember(null,null,null,null)) //chiama oim e valorizza i campi della cancellazione
+                .processor(processorGroupMember(null,null,
+                        null,null)) //chiama oim rimozioneRuoloAUtenti e valorizza i campi della cancellazione
                 .writer(writerGroupMembers)
-                //  .taskExecutor(taskExecutor)
-                // .transactionAttribute(attribute)
+                .faultTolerant()
+                .retryLimit(3)
+                .retry(HttpConnectTimeoutException.class)
+                .backOffPolicy(new ExponentialBackOffPolicy())
+                .listener(new RetryOimListener())
+                .skipLimit(10)
+                .skip(Exception.class)
+                .listener(new SkipOimListener())
                 .build();
     }
 

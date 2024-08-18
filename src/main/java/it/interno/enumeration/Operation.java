@@ -5,7 +5,7 @@ package it.interno.enumeration;
  * @project portale-gestioneapplicazioni-service-batch
  */
 public enum Operation {
-    DELETE_APP ("DELETE_APP"),DELETE_ALL_GROUPS("DELETE_ALL_GROUPS"),OTHER("OTHER");
+    DELETE_APP ("DELETE_APP"),DELETE_ALL_GROUPS("DELETE_ALL_GROUPS"),DELETE_ALL_REGOLE_SICUREZZA("DELETE_ALL_REGOLE_SICUREZZA"),OTHER("OTHER");
 
     private String operation;
 

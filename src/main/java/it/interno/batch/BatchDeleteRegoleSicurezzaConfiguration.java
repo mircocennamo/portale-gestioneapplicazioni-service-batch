@@ -1,5 +1,7 @@
 package it.interno.batch;
 
+import it.interno.entity.GroupMembers;
+import it.interno.entity.Groups;
 import it.interno.entity.Request;
 import it.interno.enumeration.Operation;
 import it.interno.enumeration.Status;
@@ -17,6 +19,8 @@ import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
+import org.springframework.batch.item.Chunk;
+import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.data.RepositoryItemReader;
 import org.springframework.batch.item.data.RepositoryItemWriter;
 import org.springframework.batch.item.data.builder.RepositoryItemReaderBuilder;
@@ -32,7 +36,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Configuration
-public class BatchDeleteGroupsConfiguration {
+public class BatchDeleteRegoleSicurezzaConfiguration {
 
     @Autowired
     RequestRepository requestRepository;
@@ -42,17 +46,17 @@ public class BatchDeleteGroupsConfiguration {
 
 
 
-    public static final String JOB_DELETE_ALL_GROUPS_BATCH = "JOB_DELETE_ALL_GROUPS_BATCH";
+    public static final String JOB_DELETE_ALL_REGOLE_SICUREZZA_BATCH = "JOB_DELETE_ALL_REGOLE_SICUREZZA_BATCH";
+/*
 
-
-    @Bean(name = JOB_DELETE_ALL_GROUPS_BATCH)
-    public Job deleteApplication(JobRepository jobRepository, JobCompletionNotificationListener listener, Step stepRequestDeleteGroups,
-                                 Step stepDeleteOim,Step stepApplicMotivMember,
+    @Bean(name = JOB_DELETE_ALL_REGOLE_SICUREZZA_BATCH)
+    public Job deleteAllRegoleSicurezza(JobRepository jobRepository, JobCompletionNotificationListener listener, Step stepRequestDeleteRegoleSicurezza,
+                                 Step stepDeleteRegoleSicurezzaOim,Step stepApplicMotivMember,
                                  Step stepGroupMember,Step stepRegoleSicurezza,Step stepGroups) {
-        return new JobBuilder("deleteAllGroupsJob", jobRepository)
+        return new JobBuilder("deleteAllRegoleSicurezza", jobRepository)
                 .incrementer(new RunIdIncrementer())
                 .listener(listener)
-                .start(stepRequestDeleteGroups).next(stepDeleteOim)
+                .start(stepRequestDeleteRegoleSicurezza).next(stepDeleteRegoleSicurezzaOim)
                 .next(stepGroupMember).next(stepGroups)
                 .next(stepRegoleSicurezza)
                 .next(stepApplicMotivMember)
@@ -65,13 +69,13 @@ public class BatchDeleteGroupsConfiguration {
 
     @Bean(destroyMethod = "")
     @StepScope
-    public RepositoryItemReader<Request> readerDeleteGroups(@Value(("#{jobParameters['applicationId']}")) String applicationId) {
+    public RepositoryItemReader<Request> readerDeleteRegoleSicurezza(@Value(("#{jobParameters['applicationId']}")) String applicationId) {
         Map<String, Sort.Direction> sortMap = new HashMap<>();
         sortMap.put("id", Sort.Direction.DESC);
         return new RepositoryItemReaderBuilder<Request>()
                 .repository(requestRepository)
                 .methodName("findRequestByStatusAndIdAppAndOperation")
-                .arguments(Arrays.asList(Status.TO_BE_ASSIGNED.getStatus(),applicationId, Operation.DELETE_ALL_GROUPS.getOperation()))
+                .arguments(Arrays.asList(Status.TO_BE_ASSIGNED.getStatus(),applicationId, Operation.DELETE_ALL_REGOLE_SICUREZZA.getOperation()))
                 .sorts(sortMap)
                 .saveState(false)
                 .build();
@@ -80,11 +84,11 @@ public class BatchDeleteGroupsConfiguration {
 
 
     @Bean
-    public Step stepRequestDeleteGroups(JobRepository jobRepository, PlatformTransactionManager transactionManager,
+    public Step stepRequestDeleteRegoleSicurezza(JobRepository jobRepository, PlatformTransactionManager transactionManager,
                             RepositoryItemWriter<Request> writer) {
-        return new StepBuilder("stepRequestDeleteGroups", jobRepository)
+        return new StepBuilder("stepRequestDeleteGropus", jobRepository)
                 .<Request, Request> chunk(20, transactionManager)
-                .reader(readerDeleteGroups(null)) //legge la riga dal db da lavorare
+                .reader(readerDeleteRegoleSicurezza(null)) //legge la riga dal db da lavorare
                 .listener(new RequestStepExecutionListener())
                 .listener(new RequestItemReadListener())
                 .listener(new RequestItemProcessListener())
@@ -94,5 +98,46 @@ public class BatchDeleteGroupsConfiguration {
                 // .taskExecutor(taskExecutor)
                 .build();
     }
+
+
+
+    @Bean
+    public Step stepDeleteRegoleSicurezzaOim(JobRepository jobRepository, PlatformTransactionManager transactionManager,
+                              RepositoryItemWriter<Groups> writerGroupMembers
+    ) {
+
+        return new StepBuilder("stepDeleteOim", jobRepository)
+                .<Groups, Groups> chunk(20, transactionManager)
+
+                .reader(readerStepGruppi(null)) //legge le righe della groups dal db da lavorare
+
+                .processor(processorDeleteRuoliOim(null)) //chiama oim e valorizza i campi della cancellazione
+                .writer(new ItemWriter<Groups>() {
+                    @Override
+                    public void write(Chunk<? extends Groups> chunk) throws Exception {
+                        //do nothing
+                    }
+                })
+                //  .taskExecutor(taskExecutor)
+                // .transactionAttribute(attribute)
+                .build();
+    }
+
+
+    @Bean(destroyMethod = "")
+    @StepScope
+    public RepositoryItemReader<GroupMembers> readerStepGroupMember(@Value(("#{jobParameters['applicationId']}")) String applicationId) {
+        Map<String, Sort.Direction> sortMap = new HashMap<>();
+        sortMap.put("G_MEMBER", Sort.Direction.DESC);
+        return new RepositoryItemReaderBuilder<GroupMembers>()
+                .repository(groupMemberRepository)
+                .methodName("getByRuolo")
+                .arguments(Arrays.asList(applicationId))
+                .sorts(sortMap)
+                .saveState(false)
+                .build();
+    }
+
+ */
 
 }
