@@ -1,4 +1,4 @@
-package it.interno.listener.applicazioneMotivzione;
+package it.interno.listener.applicazioneMotivazione;
 
 import it.interno.entity.ApplicazioneMotivazione;
 import lombok.extern.slf4j.Slf4j;

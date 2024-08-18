@@ -1,4 +1,4 @@
-package it.interno.listener.gropuMembers;
+package it.interno.listener.groupMembers;
 
 import it.interno.entity.GroupMembers;
 import org.springframework.batch.core.SkipListener;

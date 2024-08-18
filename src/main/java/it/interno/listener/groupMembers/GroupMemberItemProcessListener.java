@@ -1,13 +1,9 @@
-package it.interno.listener.gropuMembers;
+package it.interno.listener.groupMembers;
 
 import it.interno.entity.GroupMembers;
-import it.interno.repository.GroupMemberRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.ItemProcessListener;
 import org.springframework.stereotype.Component;
-
-import java.sql.Timestamp;
-import java.time.Instant;
 
 /**
  * @author mirco.cennamo on 06/08/2024

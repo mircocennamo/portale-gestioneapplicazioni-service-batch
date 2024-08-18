@@ -11,8 +11,8 @@ import it.interno.listener.applicMotivMember.ApplicMotivMemberItemWriteListener;
 import it.interno.listener.applicMotivMember.ApplicMotivMemberSkipListener;
 import it.interno.listener.applicMotivMember.ApplicMotivMemberStepExecutionListener;
 import it.interno.listener.applicazione.*;
-import it.interno.listener.applicazioneMotivzione.ApplicazioneMotivazioneItemProcessListener;
-import it.interno.listener.gropuMembers.*;
+import it.interno.listener.applicazioneMotivazione.ApplicazioneMotivazioneItemProcessListener;
+import it.interno.listener.groupMembers.*;
 import it.interno.listener.group.GroupItemProcessListener;
 import it.interno.listener.group.GroupItemWriteListener;
 import it.interno.listener.group.GroupsSkipListener;
@@ -101,7 +101,7 @@ public class BatchDeleteApplicationConfiguration {
     public Job deleteApplication(JobRepository jobRepository, JobCompletionNotificationListener JobCompletionNotificationListener,
                                  Step stepRequest,
                                  Step stepDeleteRuoliOim,
-                                 Step stepRimozioneRuoloAUtenteOim, //rimozioneRuoloAUtenti
+                                 Step stepRimozioneRuoloAUtenteOim,
                                  Step stepRegoleSicurezza,
                                  Step stepGroups,
                                  Step stepApplicazioneMotivazione,

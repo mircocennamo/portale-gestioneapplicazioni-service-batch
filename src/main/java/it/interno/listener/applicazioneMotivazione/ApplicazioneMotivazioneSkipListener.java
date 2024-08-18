@@ -1,7 +1,6 @@
-package it.interno.listener.applicazioneMotivzione;
+package it.interno.listener.applicazioneMotivazione;
 
 import it.interno.entity.ApplicazioneMotivazione;
-import it.interno.entity.Groups;
 import org.springframework.batch.core.SkipListener;
 
 /**
