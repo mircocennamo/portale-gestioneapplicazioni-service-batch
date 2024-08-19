@@ -5,7 +5,7 @@ import it.interno.entity.*;
 import it.interno.enumeration.Operation;
 import it.interno.enumeration.Status;
 import it.interno.listener.JobCompletionNotificationListener;
-import it.interno.listener.RequestStepExecutionListener;
+import it.interno.listener.request.RequestStepExecutionListener;
 import it.interno.listener.applicMotivMember.ApplicMotivMemberItemProcessListener;
 import it.interno.listener.applicMotivMember.ApplicMotivMemberItemWriteListener;
 import it.interno.listener.applicMotivMember.ApplicMotivMemberSkipListener;
@@ -93,12 +93,29 @@ public class BatchDeleteApplicationConfiguration {
 
 
 
+    /* **************************************** SEZIONE  GLOBALE  ******************************************************************** */
+
+
+    @Bean(name = "asyncJobLauncher")
+    public JobLauncher simpleJobLauncher(JobRepository jobRepository){
+        TaskExecutorJobLauncher jobLauncher = new TaskExecutorJobLauncher();
+        jobLauncher.setJobRepository(jobRepository);
+        jobLauncher.setTaskExecutor(new SimpleAsyncTaskExecutor());
+        return jobLauncher;
+    }
+
+
+    /* **************************************** FINE SEZIONE  GLOBALE  ******************************************************************** */
+
+
+
 
     public static final String JOB_DELETE_APPLICATION_BATCH = "JOB_DELETE_APPLICATION_BATCH";
 
 
     @Bean(name = JOB_DELETE_APPLICATION_BATCH)
-    public Job deleteApplication(JobRepository jobRepository, JobCompletionNotificationListener JobCompletionNotificationListener,
+    public Job deleteApplication(JobRepository jobRepository,
+                                 JobCompletionNotificationListener JobCompletionNotificationListener,
                                  Step stepRequest,
                                  Step stepDeleteRuoliOim,
                                  Step stepRimozioneRuoloAUtenteOim,
@@ -111,7 +128,7 @@ public class BatchDeleteApplicationConfiguration {
                 .incrementer(new RunIdIncrementer())
                 .listener(JobCompletionNotificationListener)
                 .start(stepRequest)
-                .next(stepDeleteRuoliOim)
+                .next(stepDeleteRuoliOim) //groups
                 .next(stepRimozioneRuoloAUtenteOim)
                 .next(stepGroups)
                 .next(stepRegoleSicurezza)
@@ -121,15 +138,31 @@ public class BatchDeleteApplicationConfiguration {
                 .build();
     }
 
+    /* *********************************************************** STEP SEZIONE GESTIONE REQUEST ******************************************************************** */
 
-   /* step1 --> recupero request da eseguire dal DB in base all'id dell'applicazione
-   dopo la lettura lo stato passa a STARTED -> PRIMA DEL PROCESSAMENTO RUNNING
-    */
+    @Bean
+    public Step stepRequest(JobRepository jobRepository, PlatformTransactionManager transactionManager,
+                            RepositoryItemWriter<Request> writer) {
+        return new StepBuilder("stepRequest", jobRepository)
+                .<Request, Request> chunk(20, transactionManager)
+                .reader(readerRequest(null)) //legge la riga dal db da lavorare
+                .listener(new RequestStepExecutionListener())
+                .listener(new RequestItemReadListener())
+                .listener(new RequestItemProcessListener())
+                .listener(new RequestItemWriteListener())
+                .processor(requestItemProcessor())
+                .writer(writer)
+                // .taskExecutor(taskExecutor)
+                .build();
+    }
+
+
+
 
 
     @Bean(destroyMethod = "")
     @StepScope
-    public RepositoryItemReader<Request> reader(@Value(("#{jobParameters['applicationId']}")) String applicationId) {
+    public RepositoryItemReader<Request> readerRequest(@Value(("#{jobParameters['applicationId']}")) String applicationId) {
         Map<String, Sort.Direction> sortMap = new HashMap<>();
         sortMap.put("id", Sort.Direction.DESC);
         return new RepositoryItemReaderBuilder<Request>()
@@ -141,69 +174,30 @@ public class BatchDeleteApplicationConfiguration {
                 .build();
     }
 
+    //valorizza il job id che ha preso in carico la request
     @Bean
-    public RequestItemProcessor processor() {
+    public RequestItemProcessor requestItemProcessor() {
         return new RequestItemProcessor();
     }
 
 
-    @Bean(destroyMethod = "")
-    @StepScope
-    public  GroupMemberItemProcessListener groupMemberItemProcessListener() {
-        return new GroupMemberItemProcessListener();
-    }
-
-
-
+    //rende persistente la request sulla tabella SSD_SECURITY.REQUEST
     @Bean
     public RepositoryItemWriter<Request> writer() {
         return new RepositoryItemWriterBuilder<Request>().methodName("save").repository(requestRepository).build();
 
     }
 
-    @Bean
-    public Step stepRequest(JobRepository jobRepository, PlatformTransactionManager transactionManager,
-                            RepositoryItemWriter<Request> writer) {
-        return new StepBuilder("stepRequest", jobRepository)
-                .<Request, Request> chunk(20, transactionManager)
-                .reader(reader(null)) //legge la riga dal db da lavorare
-                .listener(new RequestStepExecutionListener())
-                .listener(new RequestItemReadListener())
-                .listener(new RequestItemProcessListener())
-                .listener(new RequestItemWriteListener())
-                .processor(processor())
-                .writer(writer)
-                // .taskExecutor(taskExecutor)
-                .build();
-    }
-
-
-
-
-
-
-
-
-
-    @Bean(destroyMethod = "")
-    @StepScope
-    public OimItemProcessor processorDeleteRuoliOim(@Value(("#{jobParameters['applicationId']}")) String applicationId) {
-        return new OimItemProcessor(oimClient,applicationId);
-    }
-
+    /* *********************************************************** STEP SEZIONE CHIAMATE OIM (DELETE RUOLI) ******************************************************************** */
 
 
     //retry nel caso di ConnectionTimeOut con 3 tentativi
     @Bean
-    public Step stepDeleteRuoliOim(JobRepository jobRepository, PlatformTransactionManager transactionManager,
-                                   RepositoryItemWriter<Groups> writerGroupMembers
-    ) {
+    public Step stepDeleteRuoliOim(JobRepository jobRepository, PlatformTransactionManager transactionManager) {
 
         return new StepBuilder("stepDeleteRuoliOim", jobRepository)
                 .<Groups, Groups> chunk(20, transactionManager)
-
                 .reader(readerStepGruppi(null)) //legge le righe della groups dal db da lavorare
-
                 .processor(processorDeleteRuoliOim(null)) //chiama oim
                 .writer(new ItemWriter<Groups>() {
                     @Override
@@ -219,66 +213,38 @@ public class BatchDeleteApplicationConfiguration {
                 .skipLimit(10)
                 .skip(Exception.class)
                 .listener(new SkipOimListener())
-
-                //  .taskExecutor(taskExecutor)
-                // .transactionAttribute(attribute)
                 .build();
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    /* step2 --> recupero le groupmemembers  dal DB in base all'id dell'applicazione,chiamo oim e aggiorno la tabella GROUPMEMBERS con
-    dataCancellazione / utenteCancellazione /ufficioCancellazione
-     */
-
     @Bean(destroyMethod = "")
     @StepScope
-    public RepositoryItemReader<GroupMembers> readerStepGroupMember(@Value(("#{jobParameters['applicationId']}")) String applicationId) {
+    public RepositoryItemReader<Groups> readerStepGruppi(@Value(("#{jobParameters['applicationId']}")) String applicationId) {
         Map<String, Sort.Direction> sortMap = new HashMap<>();
-        sortMap.put("G_MEMBER", Sort.Direction.DESC);
-        return new RepositoryItemReaderBuilder<GroupMembers>()
-                .repository(groupMemberRepository)
-                .methodName("findByAppId")
+        sortMap.put("G_NAME", Sort.Direction.DESC);
+        return new RepositoryItemReaderBuilder<Groups>()
+                .repository(groupsRepository)
+                .methodName("findAllByAppId")
                 .arguments(Arrays.asList(applicationId))
                 .sorts(sortMap)
                 .saveState(false)
                 .build();
     }
 
+
+
+
     @Bean(destroyMethod = "")
     @StepScope
-    public GroupMemberItemProcessor processorGroupMember(
-            @Value(("#{jobParameters['utenteCancellazione']}")) String utenteCancellazione,
-            @Value(("#{jobParameters['ufficioCancellazione']}")) String ufficioCancellazione,@Value(("#{jobParameters['currentTimeStamp']}")) Timestamp currentTimeStamp
-            ,@Value(("#{jobParameters['applicationId']}")) String applicationId
-
-    ) {
-        return new GroupMemberItemProcessor(oimClient,utenteCancellazione,ufficioCancellazione,currentTimeStamp,applicationId);
-    }
-
-
-    @Bean
-    public RepositoryItemWriter<GroupMembers> writerGroupMembers() {
-        return new RepositoryItemWriterBuilder<GroupMembers>().methodName("save").repository(groupMemberRepository).build();
-
+    public OimItemProcessor processorDeleteRuoliOim(@Value(("#{jobParameters['applicationId']}")) String applicationId) {
+        return new OimItemProcessor(oimClient,applicationId);
     }
 
 
 
+    /* **************************************** FINE STEP SEZIONE CHIAMATE OIM (DELETE RUOLI) ******************************************************************** */
 
+
+    /* ****************************************  STEP SEZIONE CHIAMATE OIM (RIMOZIONE RUOLO A UTENTE) ******************************************************************** */
 
 
 
@@ -310,28 +276,97 @@ public class BatchDeleteApplicationConfiguration {
                 .build();
     }
 
-
-//STEP 3 GESTIONE DI SICUREZZA
-
     @Bean(destroyMethod = "")
     @StepScope
-    public RepositoryItemReader<RegolaSicurezza> readerStepRegoleSicurezza(@Value(("#{jobParameters['applicationId']}")) String applicationId) {
+    public RepositoryItemReader<GroupMembers> readerStepGroupMember(@Value(("#{jobParameters['applicationId']}")) String applicationId) {
         Map<String, Sort.Direction> sortMap = new HashMap<>();
-        sortMap.put("G_NAME", Sort.Direction.DESC);
-        return new RepositoryItemReaderBuilder<RegolaSicurezza>()
-                .repository(regolaSicurezzaRepository)
-                .methodName("getRegoleByAppId")
+        sortMap.put("G_MEMBER", Sort.Direction.DESC);
+        return new RepositoryItemReaderBuilder<GroupMembers>()
+                .repository(groupMemberRepository)
+                .methodName("findByAppId")
                 .arguments(Arrays.asList(applicationId))
                 .sorts(sortMap)
                 .saveState(false)
                 .build();
     }
 
+    @Bean(destroyMethod = "")
+    @StepScope
+    public  GroupMemberItemProcessListener groupMemberItemProcessListener() {
+        return new GroupMemberItemProcessListener();
+    }
+
+
+
+    @Bean(destroyMethod = "")
+    @StepScope
+    public GroupMemberItemProcessor processorGroupMember(
+            @Value(("#{jobParameters['utenteCancellazione']}")) String utenteCancellazione,
+            @Value(("#{jobParameters['ufficioCancellazione']}")) String ufficioCancellazione,@Value(("#{jobParameters['currentTimeStamp']}")) Timestamp currentTimeStamp
+            ,@Value(("#{jobParameters['applicationId']}")) String applicationId
+
+    ) {
+        return new GroupMemberItemProcessor(oimClient,utenteCancellazione,ufficioCancellazione,currentTimeStamp,applicationId);
+    }
+
+
+
+
     @Bean
-    public RepositoryItemWriter<RegolaSicurezza> writerRegoleSicurezza() {
-        return new RepositoryItemWriterBuilder<RegolaSicurezza>().methodName("delete").repository(regolaSicurezzaRepository).build();
+    public RepositoryItemWriter<GroupMembers> writerGroupMembers() {
+        return new RepositoryItemWriterBuilder<GroupMembers>().methodName("save").repository(groupMemberRepository).build();
 
     }
+
+
+
+    /* ****************************************  FINE  STEP SEZIONE CHIAMATE OIM (RIMOZIONE RUOLO A UTENTE) ******************************************************************** */
+
+
+    /* ****************************************    STEP SEZIONE GROUPS  ******************************************************************** */
+
+    @Bean
+    public Step stepGroups(JobRepository jobRepository, PlatformTransactionManager transactionManager
+    ) {
+        return new StepBuilder("stepGroups", jobRepository)
+                .<Groups, Groups> chunk(20, transactionManager)
+                .reader(readerStepGruppi(null)) //legge le righe della groups dal db da lavorare
+                .listener(new GroupsStepExecutionListener())
+
+                .listener(groupItemProcessListener())
+                .listener(new GroupItemWriteListener()) //logga la scrittura sul db
+                .listener(new GroupsSkipListener())
+                .processor(processorGroup(null,null,null)) //chiama oim e valorizza i campi della cancellazione
+                .writer(writerGroup())
+                .build();
+    }
+
+    @Bean(destroyMethod = "")
+    @StepScope
+    public GroupItemProcessListener groupItemProcessListener()  {
+        return new GroupItemProcessListener();
+    }
+
+    @Bean
+    @StepScope
+    public GroupsItemProcessor processorGroup(@Value(("#{jobParameters['utenteCancellazione']}")) String utenteCancellazione,
+                                              @Value(("#{jobParameters['ufficioCancellazione']}")) String ufficioCancellazione, @Value(("#{jobParameters['currentTimeStamp']}")) Timestamp currentTimeStamp) {
+        return new GroupsItemProcessor(groupsAggregazioneRepository,ruoloQualificaAssegnabilitaRepository,utenteCancellazione,ufficioCancellazione,currentTimeStamp);
+    }
+
+
+
+    @Bean
+    public RepositoryItemWriter<Groups> writerGroup() {
+        return new RepositoryItemWriterBuilder<Groups>().methodName("save").repository(groupsRepository).build();
+
+    }
+
+    /* ****************************************  FINE  STEP SEZIONE GROUPS  ******************************************************************** */
+
+
+
+    /* ****************************************   STEP SEZIONE REGOLE SICUREZZA  ******************************************************************** */
 
     @Bean
     public Step stepRegoleSicurezza(JobRepository jobRepository, PlatformTransactionManager transactionManager
@@ -350,94 +385,29 @@ public class BatchDeleteApplicationConfiguration {
                 .build();
     }
 
-
-    //STEP 4 cancellazione gruppi / RuoloQualificaAssegnabilita / GROUPS_AGGREG
-
     @Bean(destroyMethod = "")
     @StepScope
-    public RepositoryItemReader<Groups> readerStepGruppi(@Value(("#{jobParameters['applicationId']}")) String applicationId) {
+    public RepositoryItemReader<RegolaSicurezza> readerStepRegoleSicurezza(@Value(("#{jobParameters['applicationId']}")) String applicationId) {
         Map<String, Sort.Direction> sortMap = new HashMap<>();
         sortMap.put("G_NAME", Sort.Direction.DESC);
-        return new RepositoryItemReaderBuilder<Groups>()
-                .repository(groupsRepository)
-                .methodName("findAllByAppId")
+        return new RepositoryItemReaderBuilder<RegolaSicurezza>()
+                .repository(regolaSicurezzaRepository)
+                .methodName("getRegoleByAppId")
                 .arguments(Arrays.asList(applicationId))
                 .sorts(sortMap)
                 .saveState(false)
                 .build();
     }
-
     @Bean
-    public RepositoryItemWriter<Groups> writerGroup() {
-        return new RepositoryItemWriterBuilder<Groups>().methodName("save").repository(groupsRepository).build();
+    public RepositoryItemWriter<RegolaSicurezza> writerRegoleSicurezza() {
+        return new RepositoryItemWriterBuilder<RegolaSicurezza>().methodName("delete").repository(regolaSicurezzaRepository).build();
 
     }
 
-    @Bean
-    public Step stepGroups(JobRepository jobRepository, PlatformTransactionManager transactionManager
-    ) {
-        return new StepBuilder("stepGroups", jobRepository)
-                .<Groups, Groups> chunk(20, transactionManager)
-                .reader(readerStepGruppi(null)) //legge le righe della groups dal db da lavorare
-                .listener(new GroupsStepExecutionListener())
-                // .listener(new GroupMemeberItemReadListener(groupMemberRepository))
-                .listener(groupItemProcessListener())
-                .listener(new GroupItemWriteListener()) //logga la scrittura sul db
-                .listener(new GroupsSkipListener())
-                .processor(processorGroup(null,null,null)) //chiama oim e valorizza i campi della cancellazione
-                .writer(writerGroup())
-                //.taskExecutor(taskExecutor)
-                .build();
-    }
+    /* **************************************** FINE  STEP SEZIONE REGOLE SICUREZZA  ******************************************************************** */
 
-    @Bean(destroyMethod = "")
-    @StepScope
-    public GroupItemProcessListener groupItemProcessListener()  {
-        return new GroupItemProcessListener();
-    }
+    /* ****************************************   STEP SEZIONE APPLICAZIONE MOTIVAZIONE  ******************************************************************** */
 
-
-    @Bean
-    @StepScope
-    public GroupsItemProcessor processorGroup(@Value(("#{jobParameters['utenteCancellazione']}")) String utenteCancellazione,
-                                              @Value(("#{jobParameters['ufficioCancellazione']}")) String ufficioCancellazione, @Value(("#{jobParameters['currentTimeStamp']}")) Timestamp currentTimeStamp) {
-        return new GroupsItemProcessor(groupsAggregazioneRepository,ruoloQualificaAssegnabilitaRepository,utenteCancellazione,ufficioCancellazione,currentTimeStamp);
-    }
-
-    //STEP 5 cancellazione applicazioni Motivazione
-
-    @Bean(destroyMethod = "")
-    @StepScope
-    public RepositoryItemReader<ApplicazioneMotivazione> readerStepApplicazioneMotivazione(@Value(("#{jobParameters['applicationId']}")) String applicationId) {
-        Map<String, Sort.Direction> sortMap = new HashMap<>();
-        sortMap.put("ID_TIPO_MOTIVAZIONE", Sort.Direction.DESC);
-        return new RepositoryItemReaderBuilder<ApplicazioneMotivazione>()
-                .repository(applicazioneMotivazioneRepository)
-                .methodName("findByIdApp")
-                .arguments(Arrays.asList(applicationId))
-                .sorts(sortMap)
-                .saveState(false)
-                .build();
-    }
-
-    @Bean
-    public RepositoryItemWriter<ApplicazioneMotivazione> writerApplicazioneMotivazione() {
-        return new RepositoryItemWriterBuilder<ApplicazioneMotivazione>().methodName("save").repository(applicazioneMotivazioneRepository).build();
-
-    }
-
-    @Bean
-    @StepScope
-    public ApplicazioneMotivazioneItemProcessor processorApplicazioneMotivazione() {
-        return new ApplicazioneMotivazioneItemProcessor();
-    }
-
-    @Bean(destroyMethod = "")
-    @StepScope
-    public ApplicazioneMotivazioneItemProcessListener applicazioneMotivazioneItemProcessListener(@Value(("#{jobParameters['utenteCancellazione']}")) String utenteCancellazione,
-                                                                                                 @Value(("#{jobParameters['ufficioCancellazione']}")) String ufficioCancellazione, @Value(("#{jobParameters['currentTimeStamp']}")) Timestamp currentTimeStamp) {
-        return new ApplicazioneMotivazioneItemProcessListener(utenteCancellazione,ufficioCancellazione,currentTimeStamp);
-    }
 
     @Bean
     public Step stepApplicazioneMotivazione(JobRepository jobRepository, PlatformTransactionManager transactionManager
@@ -456,43 +426,46 @@ public class BatchDeleteApplicationConfiguration {
                 .build();
     }
 
-    //STEP 6 cancellazione applic motiv member
-
     @Bean(destroyMethod = "")
     @StepScope
-    public RepositoryItemReader<ApplicMotivMembers> readerStepApplicMotivMember(@Value(("#{jobParameters['applicationId']}")) String applicationId) {
+    public RepositoryItemReader<ApplicazioneMotivazione> readerStepApplicazioneMotivazione(@Value(("#{jobParameters['applicationId']}")) String applicationId) {
         Map<String, Sort.Direction> sortMap = new HashMap<>();
-        sortMap.put("G_MEMBER", Sort.Direction.DESC);
-        return new RepositoryItemReaderBuilder<ApplicMotivMembers>()
-                .repository(applicMotivMembersRepository)
-                .methodName("getByApp")
+        sortMap.put("ID_TIPO_MOTIVAZIONE", Sort.Direction.DESC);
+        return new RepositoryItemReaderBuilder<ApplicazioneMotivazione>()
+                .repository(applicazioneMotivazioneRepository)
+                .methodName("findByIdApp")
                 .arguments(Arrays.asList(applicationId))
                 .sorts(sortMap)
                 .saveState(false)
                 .build();
     }
-
-    @Bean
-    public RepositoryItemWriter<ApplicMotivMembers> writerApplicMotivMember() {
-        return new RepositoryItemWriterBuilder<ApplicMotivMembers>().methodName("save").repository(applicMotivMembersRepository).build();
-
-    }
-
-    @Bean
-    @StepScope
-    public ApplicMotivMemberItemProcessor processorApplicMotivMember(@Value(("#{jobParameters['utenteCancellazione']}")) String utenteCancellazione,
-                                                                     @Value(("#{jobParameters['ufficioCancellazione']}")) String ufficioCancellazione,
-                                                                     @Value(("#{jobParameters['currentTimeStamp']}")) Timestamp currentTimeStamp) {
-        return new ApplicMotivMemberItemProcessor(utenteCancellazione,ufficioCancellazione,currentTimeStamp);
-    }
-
-
     @Bean(destroyMethod = "")
     @StepScope
-    public ApplicMotivMemberItemProcessListener applicMotivMemberItemProcessListener(@Value(("#{jobParameters['utenteCancellazione']}")) String utenteCancellazione,
-                                                                                     @Value(("#{jobParameters['ufficioCancellazione']}")) String ufficioCancellazione, @Value(("#{jobParameters['currentTimeStamp']}")) Timestamp currentTimeStamp) {
-        return new ApplicMotivMemberItemProcessListener(utenteCancellazione,ufficioCancellazione,currentTimeStamp);
+    public ApplicazioneMotivazioneItemProcessListener applicazioneMotivazioneItemProcessListener(@Value(("#{jobParameters['utenteCancellazione']}")) String utenteCancellazione,
+                                                                                                 @Value(("#{jobParameters['ufficioCancellazione']}")) String ufficioCancellazione, @Value(("#{jobParameters['currentTimeStamp']}")) Timestamp currentTimeStamp) {
+        return new ApplicazioneMotivazioneItemProcessListener(utenteCancellazione,ufficioCancellazione,currentTimeStamp);
     }
+
+    @Bean
+    @StepScope
+    public ApplicazioneMotivazioneItemProcessor processorApplicazioneMotivazione() {
+        return new ApplicazioneMotivazioneItemProcessor();
+    }
+
+
+    @Bean
+    public RepositoryItemWriter<ApplicazioneMotivazione> writerApplicazioneMotivazione() {
+        return new RepositoryItemWriterBuilder<ApplicazioneMotivazione>().methodName("save").repository(applicazioneMotivazioneRepository).build();
+
+    }
+
+
+    /* **************************************** FINE   STEP SEZIONE APPLICAZIONE MOTIVAZIONE  ******************************************************************** */
+
+
+
+    /* ****************************************  STEP SEZIONE APPLIC MOTIV MEMBER  ******************************************************************** */
+
 
     @Bean
     public Step stepApplicMotivMember(JobRepository jobRepository, PlatformTransactionManager transactionManager
@@ -511,35 +484,46 @@ public class BatchDeleteApplicationConfiguration {
                 // .taskExecutor(taskExecutor)
                 .build();
     }
-
-    //STEP 7 cancellazione logica SEC_APPLICAZIONE
     @Bean(destroyMethod = "")
     @StepScope
-    public RepositoryItemReader<Applicazione> readerStepApplicazione(@Value(("#{jobParameters['applicationId']}")) String applicationId) {
+    public RepositoryItemReader<ApplicMotivMembers> readerStepApplicMotivMember(@Value(("#{jobParameters['applicationId']}")) String applicationId) {
         Map<String, Sort.Direction> sortMap = new HashMap<>();
-        sortMap.put("APP_ID", Sort.Direction.DESC);
-        return new RepositoryItemReaderBuilder<Applicazione>()
-                .repository(applicazioneRepository)
-                .methodName("findById")
+        sortMap.put("G_MEMBER", Sort.Direction.DESC);
+        return new RepositoryItemReaderBuilder<ApplicMotivMembers>()
+                .repository(applicMotivMembersRepository)
+                .methodName("getByApp")
                 .arguments(Arrays.asList(applicationId))
                 .sorts(sortMap)
                 .saveState(false)
                 .build();
     }
-
-    @Bean
-    public RepositoryItemWriter<Applicazione> writerApplicazione() {
-        return new RepositoryItemWriterBuilder<Applicazione>().methodName("save").repository(applicazioneRepository).build();
-
+    @Bean(destroyMethod = "")
+    @StepScope
+    public ApplicMotivMemberItemProcessListener applicMotivMemberItemProcessListener(@Value(("#{jobParameters['utenteCancellazione']}")) String utenteCancellazione,
+                                                                                     @Value(("#{jobParameters['ufficioCancellazione']}")) String ufficioCancellazione, @Value(("#{jobParameters['currentTimeStamp']}")) Timestamp currentTimeStamp) {
+        return new ApplicMotivMemberItemProcessListener(utenteCancellazione,ufficioCancellazione,currentTimeStamp);
     }
 
     @Bean
     @StepScope
-    public ApplicazioneItemProcessor processorApplicazione(@Value(("#{jobParameters['utenteCancellazione']}")) String utenteCancellazione,
-                                                           @Value(("#{jobParameters['ufficioCancellazione']}")) String ufficioCancellazione,
-                                                           @Value(("#{jobParameters['currentTimeStamp']}")) Timestamp currentTimeStamp) {
-        return new ApplicazioneItemProcessor(utenteCancellazione,ufficioCancellazione,currentTimeStamp);
+    public ApplicMotivMemberItemProcessor processorApplicMotivMember(@Value(("#{jobParameters['utenteCancellazione']}")) String utenteCancellazione,
+                                                                     @Value(("#{jobParameters['ufficioCancellazione']}")) String ufficioCancellazione,
+                                                                     @Value(("#{jobParameters['currentTimeStamp']}")) Timestamp currentTimeStamp) {
+        return new ApplicMotivMemberItemProcessor(utenteCancellazione,ufficioCancellazione,currentTimeStamp);
     }
+
+    @Bean
+    public RepositoryItemWriter<ApplicMotivMembers> writerApplicMotivMember() {
+        return new RepositoryItemWriterBuilder<ApplicMotivMembers>().methodName("save").repository(applicMotivMembersRepository).build();
+
+    }
+
+    /* **************************************** FINE   STEP SEZIONE APPLIC MOTIV MEMBER  ******************************************************************** */
+
+
+
+    /* **************************************** STEP SEZIONE APPLICAZIONE  ******************************************************************** */
+
 
     @Bean
     public Step stepApplicazione(JobRepository jobRepository, PlatformTransactionManager transactionManager
@@ -559,6 +543,21 @@ public class BatchDeleteApplicationConfiguration {
     }
 
 
+    //STEP 7 cancellazione logica SEC_APPLICAZIONE
+    @Bean(destroyMethod = "")
+    @StepScope
+    public RepositoryItemReader<Applicazione> readerStepApplicazione(@Value(("#{jobParameters['applicationId']}")) String applicationId) {
+        Map<String, Sort.Direction> sortMap = new HashMap<>();
+        sortMap.put("APP_ID", Sort.Direction.DESC);
+        return new RepositoryItemReaderBuilder<Applicazione>()
+                .repository(applicazioneRepository)
+                .methodName("findById")
+                .arguments(Arrays.asList(applicationId))
+                .sorts(sortMap)
+                .saveState(false)
+                .build();
+    }
+
     @Bean(destroyMethod = "")
     @StepScope
     public ApplicazioneItemProcessListener applicazioneItemProcessListener(@Value(("#{jobParameters['utenteCancellazione']}")) String utenteCancellazione,
@@ -566,13 +565,25 @@ public class BatchDeleteApplicationConfiguration {
         return new ApplicazioneItemProcessListener(utenteCancellazione,ufficioCancellazione,currentTimeStamp);
     }
 
-
-
-    @Bean(name = "asyncJobLauncher")
-    public JobLauncher simpleJobLauncher(JobRepository jobRepository){
-        TaskExecutorJobLauncher jobLauncher = new TaskExecutorJobLauncher();
-        jobLauncher.setJobRepository(jobRepository);
-        jobLauncher.setTaskExecutor(new SimpleAsyncTaskExecutor());
-        return jobLauncher;
+    @Bean
+    @StepScope
+    public ApplicazioneItemProcessor processorApplicazione(@Value(("#{jobParameters['utenteCancellazione']}")) String utenteCancellazione,
+                                                           @Value(("#{jobParameters['ufficioCancellazione']}")) String ufficioCancellazione,
+                                                           @Value(("#{jobParameters['currentTimeStamp']}")) Timestamp currentTimeStamp) {
+        return new ApplicazioneItemProcessor(utenteCancellazione,ufficioCancellazione,currentTimeStamp);
     }
+
+    @Bean
+    public RepositoryItemWriter<Applicazione> writerApplicazione() {
+        return new RepositoryItemWriterBuilder<Applicazione>().methodName("save").repository(applicazioneRepository).build();
+
+    }
+
+
+
+    /* **************************************** FINE  STEP SEZIONE APPLICAZIONE  ******************************************************************** */
+
+
+
+
 }

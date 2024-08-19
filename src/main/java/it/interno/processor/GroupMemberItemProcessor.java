@@ -8,22 +8,16 @@ import org.slf4j.LoggerFactory;
 import org.springframework.batch.item.ItemProcessor;
 
 import java.sql.Timestamp;
+import java.util.Arrays;
 
 @Slf4j
 public class GroupMemberItemProcessor implements ItemProcessor<GroupMembers, GroupMembers> {
 
-   // @Autowired
-   // private OimClient oimClient;
+
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GroupMemberItemProcessor.class);
 
-
-
-
-
-
-
-    OimClient oimClient;
+     OimClient oimClient;
 
     String utenteCancellazione;
     String ufficioCancellazione;
@@ -42,7 +36,7 @@ public class GroupMemberItemProcessor implements ItemProcessor<GroupMembers, Gro
         this.ufficioCancellazione=ufficioCancellazione;
         this.currentTimeStamp=currentTimeStamp;
         this.appId=appId;
-       this.oimClient=oimClient;
+        this.oimClient=oimClient;
     }
 
     @Override
@@ -51,7 +45,7 @@ public class GroupMemberItemProcessor implements ItemProcessor<GroupMembers, Gro
 
 
 
-       // oimClient.rimozioneRuoloAUtenti(groupMembers.getNomeRuolo(), Arrays.asList( groupMembers.getNomeUtente()));
+        oimClient.rimozioneRuoloAUtenti(groupMembers.getNomeRuolo(), Arrays.asList( groupMembers.getNomeUtente()));
         //simulo errore oim
         //if(groupMembers.getNomeUtente().equals("bollo1")){
         //    throw new RuntimeException("Errore oim");

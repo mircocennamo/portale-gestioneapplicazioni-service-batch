@@ -7,6 +7,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.item.ItemProcessor;
 
+import java.util.Arrays;
+
 @Slf4j
 public class OimItemProcessor implements ItemProcessor<Groups, Groups> {
 
@@ -39,7 +41,7 @@ public class OimItemProcessor implements ItemProcessor<Groups, Groups> {
 
       */
 
-        // oimClient.deleteRuoli(Arrays.asList(group).stream().map(Groups::getNome).toList());
+         oimClient.deleteRuoli(Arrays.asList(group).stream().map(Groups::getNome).toList());
 
       return group;
     }

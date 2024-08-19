@@ -26,7 +26,10 @@ public class JobParameters {
     private String ufficioCancellazione;
     @NotNull(message = "campo operation non valorizzato")
     @Size(min = 1, message = "campo operation non valorizzato")
-    String operation;
+    private String operation;
+
+    private String nomeRuolo;
+
 
 
 }

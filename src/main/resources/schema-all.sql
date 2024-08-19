@@ -18,7 +18,7 @@
 insert into SSD_SECURITY.REQUEST   (idApplicazione, utenteCancellazione, ufficioCancellazione, operation,status) values ('12', 'mirco1', 'ufficiomio', 'DELETE_APP','TO_BE_ASSIGNED');
 insert into SSD_SECURITY.REQUEST   (idApplicazione, utenteCancellazione, ufficioCancellazione, operation,status) values ('13', 'mirco2', 'ufficiomio', 'DELETE_ALL_GROUPS','TO_BE_ASSIGNED');
 
-insert into SSD_SECURITY.REQUEST   (idApplicazione, utenteCancellazione, ufficioCancellazione, operation,status) values ('14', 'mirco1', 'ufficiomio', 'DELETE_APP','TO_BE_ASSIGNED');
+insert into SSD_SECURITY.REQUEST   (idApplicazione, utenteCancellazione, ufficioCancellazione, operation,status) values ('14', 'mirco1', 'ufficiomio', 'DELETE_ALL_REGOLE_SICUREZZA','TO_BE_ASSIGNED');
 insert into SSD_SECURITY.REQUEST   (idApplicazione, utenteCancellazione, ufficioCancellazione, operation,status) values ('15', 'mirco2', 'ufficiomio', 'DELETE_APP','TO_BE_ASSIGNED');
 
 insert into SSD_SECURITY.REQUEST   (idApplicazione, utenteCancellazione, ufficioCancellazione, operation,status) values ('16', 'mirco1', 'ufficiomio', 'DELETE_APP','TO_BE_ASSIGNED');
@@ -44,6 +44,12 @@ insert into SSD_SECURITY.GROUPMEMBERS   (G_MEMBER,G_NAME,APP_ID) values ('bollo'
 insert into SSD_SECURITY.GROUPMEMBERS   (G_MEMBER,G_NAME,APP_ID) values ('bollo','super','13');
 insert into SSD_SECURITY.GROUPMEMBERS   (G_MEMBER,G_NAME,APP_ID) values ('bollo1','super2','13');
 
+
+insert into SSD_SECURITY.GROUPMEMBERS   (G_MEMBER,G_NAME,APP_ID) values ('mirco','miaRegola1','14');
+insert into SSD_SECURITY.GROUPMEMBERS   (G_MEMBER,G_NAME,APP_ID) values ('bollo','miaRegola2','14');
+insert into SSD_SECURITY.GROUPMEMBERS   (G_MEMBER,G_NAME,APP_ID) values ('mirco','miaRegola2','14');
+--insert into SSD_SECURITY.GROUPMEMBERS   (G_MEMBER,G_NAME,APP_ID) values ('mirco','miaRegola2','14');
+
 insert into SSD_SECURITY.SEC_REGOLE_SICUREZZA (G_NAME, APP_ID, ID_BLOCCO_REGOLA, ID_PRG_BLOCCO_REGOLA,DATE_INS)
 values ('miaRegola1','12','1','1',CURRENT_TIMESTAMP());
 insert into SSD_SECURITY.SEC_REGOLE_SICUREZZA (G_NAME, APP_ID, ID_BLOCCO_REGOLA, ID_PRG_BLOCCO_REGOLA,DATE_INS)
@@ -62,6 +68,19 @@ insert into SSD_SECURITY.SEC_REGOLE_SICUREZZA (G_NAME, APP_ID, ID_BLOCCO_REGOLA,
 values ('miaRegola2','13','2','1',CURRENT_TIMESTAMP());
 insert into SSD_SECURITY.SEC_REGOLE_SICUREZZA (G_NAME, APP_ID, ID_BLOCCO_REGOLA, ID_PRG_BLOCCO_REGOLA,DATE_INS)
 values ('miaRegola2','13','3','1',CURRENT_TIMESTAMP());
+
+
+insert into SSD_SECURITY.SEC_REGOLE_SICUREZZA (G_NAME, APP_ID, ID_BLOCCO_REGOLA, ID_PRG_BLOCCO_REGOLA,DATE_INS)
+values ('miaRegola2','14','1','1',CURRENT_TIMESTAMP());
+insert into SSD_SECURITY.SEC_REGOLE_SICUREZZA (G_NAME, APP_ID, ID_BLOCCO_REGOLA, ID_PRG_BLOCCO_REGOLA,DATE_INS)
+values ('miaRegola2','14','2','1',CURRENT_TIMESTAMP());
+insert into SSD_SECURITY.SEC_REGOLE_SICUREZZA (G_NAME, APP_ID, ID_BLOCCO_REGOLA, ID_PRG_BLOCCO_REGOLA,DATE_INS)
+values ('miaRegola2','14','3','1',CURRENT_TIMESTAMP());
+
+insert into SSD_SECURITY.SEC_REGOLE_SICUREZZA (G_NAME, APP_ID, ID_BLOCCO_REGOLA, ID_PRG_BLOCCO_REGOLA,DATE_INS)
+values ('miaRegola1','14','2','1',CURRENT_TIMESTAMP());
+insert into SSD_SECURITY.SEC_REGOLE_SICUREZZA (G_NAME, APP_ID, ID_BLOCCO_REGOLA, ID_PRG_BLOCCO_REGOLA,DATE_INS)
+values ('miaRegola1','14','3','1',CURRENT_TIMESTAMP());
 
 
 INSERT into SSD_SECURITY.GROUPS (G_NAME, G_APP) values  ('miaRegola1','12');
@@ -102,6 +121,9 @@ INSERT into SSD_SECURITY.SEC_APPLIC_MOTIV_MEMBERS(G_MEMBER,APP_ID,ID_TIPO_MOTIVA
 INSERT into SSD_SECURITY.SEC_APPLIC_MOTIV_MEMBERS(G_MEMBER,APP_ID,ID_TIPO_MOTIVAZIONE) values('2','13','1');
 INSERT into SSD_SECURITY.SEC_APPLIC_MOTIV_MEMBERS(G_MEMBER,APP_ID,ID_TIPO_MOTIVAZIONE) values('3','13','2');
 
+
+INSERT into SSD_SECURITY.SEC_APPLIC_MOTIV_MEMBERS(G_MEMBER,APP_ID,ID_TIPO_MOTIVAZIONE) values('mirco','14','1');
+INSERT into SSD_SECURITY.SEC_APPLIC_MOTIV_MEMBERS(G_MEMBER,APP_ID,ID_TIPO_MOTIVAZIONE) values('mirco','14','2');
 
 INSERT into SSD_SECURITY.SEC_APPLICAZIONE(APP_ID,APP_NAME) values('12','miaApp1');
 INSERT into SSD_SECURITY.SEC_APPLICAZIONE(APP_ID,APP_NAME) values('13','miaApp2');

@@ -24,4 +24,6 @@ public interface JobService {
     List<Request> getAllJobs(Status status, Operation operation);
 
     Long deleteAllGroupsJob(JobParameters jobParameters) throws JobInstanceAlreadyCompleteException, JobExecutionAlreadyRunningException, JobParametersInvalidException, JobRestartException;
+
+    Long deleteAllRulesJob(JobParameters jobParameters) throws JobInstanceAlreadyCompleteException, JobExecutionAlreadyRunningException, JobParametersInvalidException, JobRestartException;
 }

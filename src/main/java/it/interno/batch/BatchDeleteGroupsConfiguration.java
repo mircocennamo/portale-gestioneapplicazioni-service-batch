@@ -4,7 +4,7 @@ import it.interno.entity.Request;
 import it.interno.enumeration.Operation;
 import it.interno.enumeration.Status;
 import it.interno.listener.JobCompletionNotificationListener;
-import it.interno.listener.RequestStepExecutionListener;
+import it.interno.listener.request.RequestStepExecutionListener;
 import it.interno.listener.request.RequestItemProcessListener;
 import it.interno.listener.request.RequestItemReadListener;
 import it.interno.listener.request.RequestItemWriteListener;
@@ -46,14 +46,16 @@ public class BatchDeleteGroupsConfiguration {
 
 
     @Bean(name = JOB_DELETE_ALL_GROUPS_BATCH)
-    public Job deleteApplication(JobRepository jobRepository, JobCompletionNotificationListener listener, Step stepRequestDeleteGroups,
-                                 Step stepDeleteOim,Step stepApplicMotivMember,
-                                 Step stepGroupMember,Step stepRegoleSicurezza,Step stepGroups) {
+    public Job deleteApplication(JobRepository jobRepository, JobCompletionNotificationListener JobCompletionNotificationListener, Step stepRequestDeleteGroups,
+                                 Step stepDeleteRuoliOim,Step stepRimozioneRuoloAUtenteOim,Step stepGroups
+                                 ,Step stepRegoleSicurezza,Step stepApplicMotivMember) {
         return new JobBuilder("deleteAllGroupsJob", jobRepository)
                 .incrementer(new RunIdIncrementer())
-                .listener(listener)
-                .start(stepRequestDeleteGroups).next(stepDeleteOim)
-                .next(stepGroupMember).next(stepGroups)
+                .listener(JobCompletionNotificationListener)
+                .start(stepRequestDeleteGroups)
+                .next(stepDeleteRuoliOim) //groups
+                .next(stepRimozioneRuoloAUtenteOim)
+                .next(stepGroups)
                 .next(stepRegoleSicurezza)
                 .next(stepApplicMotivMember)
                 .build();

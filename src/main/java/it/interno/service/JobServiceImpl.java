@@ -17,7 +17,6 @@ import org.springframework.batch.core.repository.JobInstanceAlreadyCompleteExcep
 import org.springframework.batch.core.repository.JobRestartException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -45,6 +44,10 @@ public class JobServiceImpl implements JobService {
     private Job batchDeleteAllGroupsJob;
 
     @Autowired
+    @Qualifier("JOB_DELETE_ALL_REGOLE_SICUREZZA_BATCH")
+    private Job batchDeleteAllRulesJob;
+
+    @Autowired
     RequestRepository requestRepository;
 
 
@@ -55,6 +58,8 @@ public class JobServiceImpl implements JobService {
     private static String UFFICIO_CANCELLAZIONE = "ufficioCancellazione";
 
     private static String CURRENT_TIMESTAMP = "currentTimeStamp";
+
+    private static String NOME_RUOLO = "nomeRuolo";
 
 
     private final AtomicLong incrementer = new AtomicLong();
@@ -100,6 +105,19 @@ public class JobServiceImpl implements JobService {
                 .addString(UFFICIO_CANCELLAZIONE,jobParameters.getUfficioCancellazione())
                 .addDate(CURRENT_TIMESTAMP, ConversionUtils.getCurrentTimestamp());
         JobExecution jobExecution = jobLauncher.run(batchDeleteAllGroupsJob, jobParametersBuilder.toJobParameters());
+
+        return jobExecution.getJobId();
+    }
+
+    @Override
+    public Long deleteAllRulesJob(JobParameters jobParameters) throws JobInstanceAlreadyCompleteException, JobExecutionAlreadyRunningException, JobParametersInvalidException, JobRestartException {
+        JobParametersBuilder jobParametersBuilder = new JobParametersBuilder()
+                .addString(APPLICATION_ID,jobParameters.getApplicationId())
+                .addString(UTENTE_CANCELLAZIONE,jobParameters.getUtenteCancellazione())
+                .addString(UFFICIO_CANCELLAZIONE,jobParameters.getUfficioCancellazione())
+                .addString(NOME_RUOLO,jobParameters.getNomeRuolo())
+                .addDate(CURRENT_TIMESTAMP, ConversionUtils.getCurrentTimestamp());
+        JobExecution jobExecution = jobLauncher.run(batchDeleteAllRulesJob, jobParametersBuilder.toJobParameters());
 
         return jobExecution.getJobId();
     }

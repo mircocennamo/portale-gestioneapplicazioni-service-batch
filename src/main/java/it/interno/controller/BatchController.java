@@ -68,6 +68,13 @@ public class BatchController {
                         .code(HttpStatus.OK.value())
                         .body(JobResponse.builder()
                                 .jobId(jobId).build()).build());
+            }else if(Operation.DELETE_ALL_REGOLE_SICUREZZA.equals(Operation.fromValue(jobParameters.getOperation()))){
+                Long jobId = jobService.deleteAllRulesJob(jobParameters);
+
+                return ResponseEntity.ok(ResponseDto.<JobResponse>builder()
+                        .code(HttpStatus.OK.value())
+                        .body(JobResponse.builder()
+                                .jobId(jobId).build()).build());
             }
 
             return ResponseEntity.ok(ResponseDto.<JobResponse>builder()
