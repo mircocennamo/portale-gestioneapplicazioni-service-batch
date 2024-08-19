@@ -5,19 +5,23 @@ import it.interno.entity.GroupMembers;
 import it.interno.entity.RegolaSicurezza;
 import it.interno.entity.Request;
 import it.interno.enumeration.Operation;
-import it.interno.enumeration.Status;
 import it.interno.listener.JobCompletionNotificationListener;
+import it.interno.listener.applicazione.RetryOimListener;
+import it.interno.listener.applicazione.SkipOimGroupMemberListener;
 import it.interno.listener.request.RequestItemProcessListener;
 import it.interno.listener.request.RequestItemReadListener;
 import it.interno.listener.request.RequestItemWriteListener;
 import it.interno.listener.request.RequestStepExecutionListener;
-import it.interno.processor.*;
+import it.interno.processor.GroupMemberCheckValiditaFindByAppIdReadListener;
+import it.interno.processor.GroupMemberCheckValiditaItemProcessor;
+import it.interno.processor.GroupMemberCheckValiditaUtenteDistintoItemProcessor;
+import it.interno.processor.RequestItemProcessor;
 import it.interno.repository.GroupMemberRepository;
 import it.interno.repository.RegolaSicurezzaRepository;
 import it.interno.repository.RequestRepository;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.batch.core.ItemReadListener;
 import org.springframework.batch.core.Job;
+import org.springframework.batch.core.SkipListener;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.builder.JobBuilder;
@@ -32,12 +36,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.Sort;
+import org.springframework.retry.backoff.ExponentialBackOffPolicy;
 import org.springframework.transaction.PlatformTransactionManager;
 
+import java.net.http.HttpConnectTimeoutException;
 import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @Configuration
@@ -105,7 +110,7 @@ public class BatchDeleteRegoleSicurezzaConfiguration {
         return new RepositoryItemReaderBuilder<Request>()
                 .repository(requestRepository)
                 .methodName("findRequestByStatusAndIdAppAndOperation")
-                .arguments(Arrays.asList(Status.TO_BE_ASSIGNED.getStatus(),applicationId, Operation.DELETE_ALL_REGOLE_SICUREZZA.getOperation()))
+                .arguments(Arrays.asList(applicationId, Operation.DELETE_ALL_REGOLE_SICUREZZA.getOperation()))
                 .sorts(sortMap)
                 .saveState(false)
                 .build();
@@ -166,6 +171,14 @@ public class BatchDeleteRegoleSicurezzaConfiguration {
                 .processor(processorCheckValiditaGroupMember(null,null,
                         null,null,null)) //chiama oim e valorizza i campi della cancellazione (chiama la stored procedure)
                 .writer(writerGroupMembers)
+                .faultTolerant()
+                .retryLimit(3)
+                .retry(HttpConnectTimeoutException.class)
+                .backOffPolicy(new ExponentialBackOffPolicy())
+                .listener(new RetryOimListener())
+                .skipLimit(10)
+                .skip(Exception.class)
+                .listener(new SkipOimGroupMemberListener())
                 .build();
     }
 
@@ -209,6 +222,29 @@ public class BatchDeleteRegoleSicurezzaConfiguration {
                 .writer(chunk -> {
                     //do nothing
                 })
+                .faultTolerant()
+                .retryLimit(3)
+                .retry(HttpConnectTimeoutException.class)
+                .backOffPolicy(new ExponentialBackOffPolicy())
+                .listener(new RetryOimListener())
+                .skipLimit(10)
+                .skip(Exception.class)
+                .listener(new SkipListener<>() {
+                    @Override
+                    public void onSkipInRead(Throwable t) {
+                        log.error("Errore in lettura");
+                    }
+
+                    @Override
+                    public void onSkipInWrite(GroupMembers item, Throwable t) {
+                        log.error("Errore in scrittura");
+                    }
+
+                    @Override
+                    public void onSkipInProcess(String item, Throwable t) {
+                        log.error("Errore in processamento");
+                    }
+                })
                 .build();
     }
 
@@ -249,6 +285,14 @@ public class BatchDeleteRegoleSicurezzaConfiguration {
                 .listener(groupMemberCheckValiditaFindByAppIdReadListener(null,null,
                         null,null,null))
                 .writer(chunk -> {})
+                .faultTolerant()
+                .retryLimit(3)
+                .retry(HttpConnectTimeoutException.class)
+                .backOffPolicy(new ExponentialBackOffPolicy())
+                .listener(new RetryOimListener())
+                .skipLimit(10)
+                .skip(Exception.class)
+                .listener(new SkipOimGroupMemberListener())
                 .build();
     }
 

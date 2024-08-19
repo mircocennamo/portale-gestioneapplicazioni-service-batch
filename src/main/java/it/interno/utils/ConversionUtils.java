@@ -1,5 +1,6 @@
 package it.interno.utils;
 
+import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -16,6 +17,10 @@ public interface ConversionUtils {
 
     static LocalDate timestampToLocalDate(Timestamp timestamp){
         return timestamp.toLocalDateTime().toLocalDate();
+    }
+
+    static Timestamp getTimeStamp(String date){
+        return Timestamp.valueOf(date);
     }
 
 

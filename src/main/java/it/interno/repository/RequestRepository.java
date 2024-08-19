@@ -19,10 +19,10 @@ import java.util.List;
 public interface RequestRepository extends JpaRepository<Request, Long> {
 
     @Query(
-            value = "SELECT * FROM SSD_SECURITY.REQUEST r WHERE r.status=?1 and r.IDAPPLICAZIONE=?2  and r.OPERATION=?3 ORDER BY r.ID DESC",
-            countQuery = "SELECT count(*) FROM SSD_SECURITY.REQUEST r WHERE r.status=?1 and r.IDAPPLICAZIONE=?2  and r.OPERATION=?3 ",
+            value = "SELECT * FROM SSD_SECURITY.REQUEST r WHERE  r.IDAPPLICAZIONE=?1  and r.OPERATION=?2 ORDER BY r.ID DESC",
+            countQuery = "SELECT count(*) FROM SSD_SECURITY.REQUEST r WHERE  r.IDAPPLICAZIONE=?1  and r.OPERATION=?2 ",
             nativeQuery = true)
-    Page<Request> findRequestByStatusAndIdAppAndOperation(String status,String applicationId,String operation, Pageable pageable);
+    Page<Request> findRequestByStatusAndIdAppAndOperation(String applicationId,String operation, Pageable pageable);
 
     @Query(
             value = "SELECT * FROM SSD_SECURITY.REQUEST r WHERE r.status=?1 AND r.OPERATION=?2 ORDER BY r.ID DESC",

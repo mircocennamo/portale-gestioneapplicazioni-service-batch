@@ -168,7 +168,7 @@ public class BatchDeleteApplicationConfiguration {
         return new RepositoryItemReaderBuilder<Request>()
                 .repository(requestRepository)
                 .methodName("findRequestByStatusAndIdAppAndOperation")
-                .arguments(Arrays.asList(Status.TO_BE_ASSIGNED.getStatus(),applicationId, Operation.DELETE_APP.getOperation()))
+                .arguments(Arrays.asList(applicationId, Operation.DELETE_APP.getOperation()))
                 .sorts(sortMap)
                 .saveState(false)
                 .build();
@@ -206,12 +206,12 @@ public class BatchDeleteApplicationConfiguration {
                     }
                 })
                 .faultTolerant()
-                .retryLimit(3)
-                .retry(HttpConnectTimeoutException.class)
-                .backOffPolicy(new ExponentialBackOffPolicy())
-                .listener(new RetryOimListener())
-                .skipLimit(10)
-                .skip(Exception.class)
+                 .retryLimit(3)
+                 .retry(HttpConnectTimeoutException.class)
+                 .backOffPolicy(new ExponentialBackOffPolicy())
+                 .listener(new RetryOimListener())
+                 .skipLimit(10)
+                 .skip(Exception.class)
                 .listener(new SkipOimListener())
                 .build();
     }

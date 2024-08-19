@@ -77,7 +77,7 @@ public class JobServiceImpl implements JobService {
                 .addString(APPLICATION_ID,jobParameters.getApplicationId())
                 .addString(UTENTE_CANCELLAZIONE,jobParameters.getUtenteCancellazione())
                 .addString(UFFICIO_CANCELLAZIONE,jobParameters.getUfficioCancellazione())
-                .addDate(CURRENT_TIMESTAMP, ConversionUtils.getCurrentTimestamp());
+                .addDate(CURRENT_TIMESTAMP, ConversionUtils.getTimeStamp(jobParameters.getCurrentDate()));
         JobExecution jobExecution = jobLauncher.run(batchDeleteApplicationJob, jobParametersBuilder.toJobParameters());
 
         return jobExecution.getJobId();
@@ -103,7 +103,7 @@ public class JobServiceImpl implements JobService {
                 .addString(APPLICATION_ID,jobParameters.getApplicationId())
                 .addString(UTENTE_CANCELLAZIONE,jobParameters.getUtenteCancellazione())
                 .addString(UFFICIO_CANCELLAZIONE,jobParameters.getUfficioCancellazione())
-                .addDate(CURRENT_TIMESTAMP, ConversionUtils.getCurrentTimestamp());
+                .addDate(CURRENT_TIMESTAMP, ConversionUtils.getTimeStamp(jobParameters.getCurrentDate()));
         JobExecution jobExecution = jobLauncher.run(batchDeleteAllGroupsJob, jobParametersBuilder.toJobParameters());
 
         return jobExecution.getJobId();
@@ -116,7 +116,7 @@ public class JobServiceImpl implements JobService {
                 .addString(UTENTE_CANCELLAZIONE,jobParameters.getUtenteCancellazione())
                 .addString(UFFICIO_CANCELLAZIONE,jobParameters.getUfficioCancellazione())
                 .addString(NOME_RUOLO,jobParameters.getNomeRuolo())
-                .addDate(CURRENT_TIMESTAMP, ConversionUtils.getCurrentTimestamp());
+                .addDate(CURRENT_TIMESTAMP, ConversionUtils.getTimeStamp(jobParameters.getCurrentDate()));
         JobExecution jobExecution = jobLauncher.run(batchDeleteAllRulesJob, jobParametersBuilder.toJobParameters());
 
         return jobExecution.getJobId();

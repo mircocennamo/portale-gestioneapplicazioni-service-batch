@@ -27,8 +27,16 @@ public class JobParameters {
     @NotNull(message = "campo operation non valorizzato")
     @Size(min = 1, message = "campo operation non valorizzato")
     private String operation;
+    @NotNull(message = "campo currentDate non valorizzato")
+    private String currentDate;
 
     private String nomeRuolo;
+
+    //parametri per la cancellazione di un group aggragazione
+    private String appPrincipale;
+    private String ruoloPrincipale;
+    private String appDipendente;
+    private String ruoloDipendente;
 
 
 

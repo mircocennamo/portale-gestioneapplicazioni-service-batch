@@ -73,7 +73,7 @@ public class BatchDeleteGroupsConfiguration {
         return new RepositoryItemReaderBuilder<Request>()
                 .repository(requestRepository)
                 .methodName("findRequestByStatusAndIdAppAndOperation")
-                .arguments(Arrays.asList(Status.TO_BE_ASSIGNED.getStatus(),applicationId, Operation.DELETE_ALL_GROUPS.getOperation()))
+                .arguments(Arrays.asList(applicationId, Operation.DELETE_ALL_GROUPS.getOperation()))
                 .sorts(sortMap)
                 .saveState(false)
                 .build();
