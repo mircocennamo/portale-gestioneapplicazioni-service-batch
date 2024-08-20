@@ -24,4 +24,11 @@ public interface ApplicMotivMembersRepository extends JpaRepository<ApplicMotivM
     @Query(value ="SELECT a.* FROM SSD_SECURITY.SEC_APPLIC_MOTIV_MEMBERS a WHERE a.G_MEMBER = ?1 AND a.APP_ID = ?2 AND a.DATE_CANC IS NULL",nativeQuery = true)
     List<ApplicMotivMembers> getByUtenteEApp(String codiceUtente, String appId);
 
+    @Query(value ="SELECT a.* FROM SSD_SECURITY.SEC_APPLIC_MOTIV_MEMBERS a WHERE  a.APP_ID = ?1 AND a.ID_TIPO_MOTIVAZIONE = ?2 AND a.DATE_CANC IS NULL ORDER BY a.APP_ID DESC",
+            countQuery = "SELECT count(*) FROM SSD_SECURITY.SEC_APPLIC_MOTIV_MEMBERS a WHERE  a.APP_ID = ?1 AND a.ID_TIPO_MOTIVAZIONE = ?2 AND a.DATE_CANC IS NULL",
+            nativeQuery = true)
+    Page<ApplicMotivMembers> getByIdAppAndIdTipoMotivazione(String idApp, String idTipoMotivazione, Pageable pageable);
+
+
+
 }

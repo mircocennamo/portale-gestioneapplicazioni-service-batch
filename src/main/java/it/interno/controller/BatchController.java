@@ -27,9 +27,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.text.ParseException;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
@@ -51,7 +50,7 @@ public class BatchController {
                             schema = @Schema(implementation = JobResponse.class)) }),
             @ApiResponse(responseCode = "404", description = "failed start batch")
     })
-    public ResponseEntity<ResponseDto<JobResponse>> startJob(@Valid @RequestBody JobParameters jobParameters) throws JobInstanceAlreadyCompleteException, JobExecutionAlreadyRunningException, JobParametersInvalidException, JobRestartException {
+    public ResponseEntity<ResponseDto<JobResponse>> startJob(@Valid @RequestBody JobParameters jobParameters) throws JobInstanceAlreadyCompleteException, JobExecutionAlreadyRunningException, JobParametersInvalidException, JobRestartException, ParseException {
 
             if(Operation.DELETE_APP.equals(Operation.fromValue(jobParameters.getOperation()))){
 
@@ -71,6 +70,12 @@ public class BatchController {
             }else if(Operation.DELETE_ALL_REGOLE_SICUREZZA.equals(Operation.fromValue(jobParameters.getOperation()))){
                 Long jobId = jobService.deleteAllRulesJob(jobParameters);
 
+                return ResponseEntity.ok(ResponseDto.<JobResponse>builder()
+                        .code(HttpStatus.OK.value())
+                        .body(JobResponse.builder()
+                                .jobId(jobId).build()).build());
+            }else if(Operation.DELETE_ALL_MOTIVAZIONI.equals(Operation.fromValue(jobParameters.getOperation()))){
+                Long jobId = jobService.deleteAllMotivazioniJob(jobParameters);
                 return ResponseEntity.ok(ResponseDto.<JobResponse>builder()
                         .code(HttpStatus.OK.value())
                         .body(JobResponse.builder()
@@ -123,48 +128,56 @@ public class BatchController {
                             schema = @Schema(implementation = JobResponse.class)) }),
             @ApiResponse(responseCode = "404", description = "batch details not Found")
     })
-    public ResponseEntity<ResponseDto<JobResponse>> info(@RequestParam Long jobId) throws ExecutionException, InterruptedException {
-        JobExecution jobExecution = jobExplorer.getJobExecution(jobId);
-        if(jobExecution == null){
-            return ResponseEntity.ok(ResponseDto.<JobResponse>builder()
+    public ResponseEntity<ResponseDto<List<JobResponse>>> info(@RequestParam Long jobId) throws ExecutionException, InterruptedException {
+        List<JobExecution> jobExecutions = jobExplorer.getJobExecutions(jobExplorer.getJobInstance(jobId));
+
+        if(jobExecutions == null || jobExecutions.isEmpty()){
+            return ResponseEntity.ok(ResponseDto.<List<JobResponse>>builder()
                     .code(HttpStatus.NOT_FOUND.value())
-                    .body(JobResponse.builder()
+                    .body(Arrays.asList(JobResponse.builder()
                             .jobId(jobId)
                             .status("NOT FOUND")
-                            .build()).build());
+                            .build())).build());
         }
+        List<JobResponse> jobResponses = new ArrayList<>();
+        jobExecutions.stream().forEach(jobExecution -> {
+            JobResponse jobResponse =JobResponse.builder()
+                    .jobId(jobExecution.getJobInstance().getId())
+                    .jobName(jobExecution.getJobInstance().getJobName())
+                    .parameters(convert(jobExecution.getJobParameters().getParameters()))
+                    .status(jobExecution.getStatus().name())
+                    .startTime(jobExecution.getStartTime())
+                    .createTime(jobExecution.getCreateTime())
+                    .endTime(jobExecution.getEndTime())
+                    .lastUpdated(jobExecution.getLastUpdated())
+                    .exitCode(jobExecution.getExitStatus().getExitCode())
+                    .exitDescription(jobExecution.getExitStatus().getExitDescription())
+                    .steps(jobExecution.getStepExecutions().stream().map(stepExecution -> StepResponse.builder()
+                            .stepId(stepExecution.getId())
+                            .stepName(stepExecution.getStepName())
+                            .status(stepExecution.getStatus().name())
+                            .readCount(stepExecution.getReadCount())
+                            .writeCount(stepExecution.getWriteCount())
+                            .commitCount(stepExecution.getCommitCount())
+                            .rollbackCount(stepExecution.getRollbackCount())
+                            .readSkipCount(stepExecution.getReadSkipCount())
+                            .processSkipCount(stepExecution.getProcessSkipCount())
+                            .writeSkipCount(stepExecution.getWriteSkipCount())
+                            .startTime(stepExecution.getStartTime())
+                            .createTime(stepExecution.getCreateTime())
+                            .endTime(stepExecution.getEndTime())
+                            .lastUpdated(stepExecution.getLastUpdated())
+                            .exitCode(stepExecution.getExitStatus().getExitCode())
+                            .exitDescription(stepExecution.getExitStatus().getExitDescription())
+                            .build()).collect(Collectors.toList()))
+                    .build();
+            jobResponses.add(jobResponse);
 
-        return ResponseEntity.ok(ResponseDto.<JobResponse>builder()
+        });
+
+        return ResponseEntity.ok(ResponseDto.<List<JobResponse>>builder()
                 .code(HttpStatus.OK.value())
-                .body(JobResponse.builder()
-                        .jobId(jobExecution.getJobInstance().getId())
-                        .jobName(jobExecution.getJobInstance().getJobName())
-                        .parameters(convert(jobExecution.getJobParameters().getParameters()))
-                        .status(jobExecution.getStatus().name())
-                        .startTime(jobExecution.getStartTime())
-                        .createTime(jobExecution.getCreateTime())
-                        .endTime(jobExecution.getEndTime())
-                        .lastUpdated(jobExecution.getLastUpdated())
-                        .exitCode(jobExecution.getExitStatus().getExitCode())
-                        .exitDescription(jobExecution.getExitStatus().getExitDescription())
-                        .steps(jobExecution.getStepExecutions().stream().map(stepExecution -> StepResponse.builder()
-                                .stepName(stepExecution.getStepName())
-                                .status(stepExecution.getStatus().name())
-                                .readCount(stepExecution.getReadCount())
-                                .writeCount(stepExecution.getWriteCount())
-                                .commitCount(stepExecution.getCommitCount())
-                                .rollbackCount(stepExecution.getRollbackCount())
-                                .readSkipCount(stepExecution.getReadSkipCount())
-                                .processSkipCount(stepExecution.getProcessSkipCount())
-                                .writeSkipCount(stepExecution.getWriteSkipCount())
-                                .startTime(stepExecution.getStartTime())
-                                .createTime(stepExecution.getCreateTime())
-                                .endTime(stepExecution.getEndTime())
-                                .lastUpdated(stepExecution.getLastUpdated())
-                                .exitCode(stepExecution.getExitStatus().getExitCode())
-                                .exitDescription(stepExecution.getExitStatus().getExitDescription())
-                                .build()).collect(Collectors.toList()))
-                        .build()).build());
+                .body(jobResponses).build());
 
 
     }

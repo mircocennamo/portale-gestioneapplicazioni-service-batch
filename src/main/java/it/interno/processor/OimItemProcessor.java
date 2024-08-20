@@ -35,11 +35,11 @@ public class OimItemProcessor implements ItemProcessor<Groups, Groups> {
     public Groups process(final Groups group) {
         //chiamo oim per cancellare l'utente dal gruppo
 
-     /*  if("13".equals(appId)){
+       if("13".equals(appId)){
            throw new RuntimeException("Simulo errore da oim");
        }
 
-      */
+
 
          oimClient.deleteRuoli(Arrays.asList(group).stream().map(Groups::getNome).toList());
 

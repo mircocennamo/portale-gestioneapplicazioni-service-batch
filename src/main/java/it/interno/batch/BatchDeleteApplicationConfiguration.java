@@ -205,7 +205,7 @@ public class BatchDeleteApplicationConfiguration {
                         //do nothing
                     }
                 })
-                .faultTolerant()
+                /*.faultTolerant()
                  .retryLimit(3)
                  .retry(HttpConnectTimeoutException.class)
                  .backOffPolicy(new ExponentialBackOffPolicy())
@@ -213,6 +213,8 @@ public class BatchDeleteApplicationConfiguration {
                  .skipLimit(10)
                  .skip(Exception.class)
                 .listener(new SkipOimListener())
+
+                 */
                 .build();
     }
 

@@ -12,7 +12,7 @@ import lombok.*;
 @ToString
 @Builder
 public class StepResponse {
-    private String stepId;
+    private long stepId;
     private String stepName;
     private String status;
     private long readCount;

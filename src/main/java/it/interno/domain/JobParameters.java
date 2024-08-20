@@ -38,6 +38,8 @@ public class JobParameters {
     private String appDipendente;
     private String ruoloDipendente;
 
+    private String tipoMotivazioneId;
+
 
 
 }
