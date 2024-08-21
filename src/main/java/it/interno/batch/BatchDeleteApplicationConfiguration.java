@@ -3,25 +3,24 @@ package it.interno.batch;
 import it.interno.client.OimClient;
 import it.interno.entity.*;
 import it.interno.enumeration.Operation;
-import it.interno.enumeration.Status;
 import it.interno.listener.JobCompletionNotificationListener;
-import it.interno.listener.request.RequestStepExecutionListener;
 import it.interno.listener.applicMotivMember.ApplicMotivMemberItemProcessListener;
 import it.interno.listener.applicMotivMember.ApplicMotivMemberItemWriteListener;
 import it.interno.listener.applicMotivMember.ApplicMotivMemberSkipListener;
 import it.interno.listener.applicMotivMember.ApplicMotivMemberStepExecutionListener;
 import it.interno.listener.applicazione.*;
 import it.interno.listener.applicazioneMotivazione.ApplicazioneMotivazioneItemProcessListener;
-import it.interno.listener.groupMembers.*;
 import it.interno.listener.group.GroupItemProcessListener;
 import it.interno.listener.group.GroupItemWriteListener;
 import it.interno.listener.group.GroupsSkipListener;
 import it.interno.listener.group.GroupsStepExecutionListener;
+import it.interno.listener.groupMembers.*;
 import it.interno.listener.regolesicurezza.RegoleSicurezzaSkipListener;
 import it.interno.listener.regolesicurezza.RegoleSicurezzaStepExecutionListener;
 import it.interno.listener.request.RequestItemProcessListener;
 import it.interno.listener.request.RequestItemReadListener;
 import it.interno.listener.request.RequestItemWriteListener;
+import it.interno.listener.request.RequestStepExecutionListener;
 import it.interno.processor.*;
 import it.interno.repository.*;
 import org.springframework.batch.core.Job;
@@ -92,7 +91,6 @@ public class BatchDeleteApplicationConfiguration {
     ApplicazioneRepository applicazioneRepository;
 
 
-
     /* **************************************** SEZIONE  GLOBALE  ******************************************************************** */
 
 
@@ -103,6 +101,8 @@ public class BatchDeleteApplicationConfiguration {
         jobLauncher.setTaskExecutor(new SimpleAsyncTaskExecutor());
         return jobLauncher;
     }
+
+
 
 
     /* **************************************** FINE SEZIONE  GLOBALE  ******************************************************************** */
