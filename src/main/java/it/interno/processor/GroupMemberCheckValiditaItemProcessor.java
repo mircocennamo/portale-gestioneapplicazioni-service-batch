@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.sql.Timestamp;
 
@@ -32,7 +33,8 @@ public class GroupMemberCheckValiditaItemProcessor implements ItemProcessor<Grou
 
     String nomeRuolo;
 
-
+    @Value("${enable.oim}")
+    private boolean enableOim;
 
 
     public GroupMemberCheckValiditaItemProcessor(OimClient oimClient, String utenteCancellazione,
@@ -58,7 +60,10 @@ public class GroupMemberCheckValiditaItemProcessor implements ItemProcessor<Grou
             groupMembers.setUtenteCancellazione(utenteCancellazione);
             groupMembers.setUfficioCancellazione(ufficioCancellazione);
             groupMembers.setDataCancellazione(currentTimeStamp);
-            oimClient.rimozioneRuolo(groupMembers.getNomeUtente(),groupMembers.getNomeRuolo());
+            if(enableOim){
+                oimClient.rimozioneRuolo(groupMembers.getNomeUtente(),groupMembers.getNomeRuolo());
+            }
+
         }
 
 

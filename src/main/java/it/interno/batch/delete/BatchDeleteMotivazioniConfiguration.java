@@ -1,4 +1,4 @@
-package it.interno.batch;
+package it.interno.batch.delete;
 
 import it.interno.client.OimClient;
 import it.interno.entity.*;
@@ -98,13 +98,13 @@ public class BatchDeleteMotivazioniConfiguration {
 
     @Bean(destroyMethod = "")
     @StepScope
-    public RepositoryItemReader<Request> readerRequestDeleteAllMotivazioni(@Value(("#{jobParameters['applicationId']}")) String applicationId) {
+    public RepositoryItemReader<Request> readerRequestDeleteAllMotivazioni(@Value(("#{jobParameters['requestId']}")) String requestId) {
         Map<String, Sort.Direction> sortMap = new HashMap<>();
         sortMap.put("id", Sort.Direction.DESC);
         return new RepositoryItemReaderBuilder<Request>()
                 .repository(requestRepository)
-                .methodName("findRequestByStatusAndIdAppAndOperation")
-                .arguments(Arrays.asList(applicationId, Operation.DELETE_ALL_MOTIVAZIONI.getOperation()))
+                .methodName("findRequestByIdRequestAndOperation")
+                .arguments(Arrays.asList(requestId, Operation.DELETE_ALL_MOTIVAZIONI.getOperation()))
                 .sorts(sortMap)
                 .saveState(false)
                 .build();

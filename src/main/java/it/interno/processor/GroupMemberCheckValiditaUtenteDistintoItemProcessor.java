@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.sql.Timestamp;
 import java.util.List;
@@ -43,6 +44,9 @@ public class GroupMemberCheckValiditaUtenteDistintoItemProcessor implements Item
 
     String nomeRuolo;
 
+    @Value("${enable.oim}")
+    private boolean enableOim;
+
 
 
 
@@ -68,7 +72,10 @@ public class GroupMemberCheckValiditaUtenteDistintoItemProcessor implements Item
             master.setUtenteCancellazione(utenteCancellazione);
             master.setUfficioCancellazione(ufficioCancellazione);
             master.setDataCancellazione(currentTimeStamp);
-            oimClient.rimozioneRuolo(master.getNomeUtente(),master.getNomeRuolo());
+            if(enableOim){
+                oimClient.rimozioneRuolo(master.getNomeUtente(),master.getNomeRuolo());
+            }
+
             groupMemberRepository.save(master);
 
             List<ApplicMotivMembers>  applicMotivMembers = applicMotivMembersRepository.getByUtenteEApp(utenteApp, appId);

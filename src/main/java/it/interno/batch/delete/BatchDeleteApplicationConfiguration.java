@@ -1,5 +1,6 @@
-package it.interno.batch;
+package it.interno.batch.delete;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import it.interno.client.OimClient;
 import it.interno.entity.*;
 import it.interno.enumeration.Operation;
@@ -46,11 +47,13 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.retry.backoff.ExponentialBackOffPolicy;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import java.net.http.HttpConnectTimeoutException;
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -100,6 +103,12 @@ public class BatchDeleteApplicationConfiguration {
         jobLauncher.setJobRepository(jobRepository);
         jobLauncher.setTaskExecutor(new SimpleAsyncTaskExecutor());
         return jobLauncher;
+    }
+
+    @Bean
+    public Jackson2ObjectMapperBuilder jackson2ObjectMapperBuilder() {
+        return new Jackson2ObjectMapperBuilder()
+                .serializationInclusion(JsonInclude.Include.NON_NULL).dateFormat(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
     }
 
 
@@ -162,13 +171,13 @@ public class BatchDeleteApplicationConfiguration {
 
     @Bean(destroyMethod = "")
     @StepScope
-    public RepositoryItemReader<Request> readerRequest(@Value(("#{jobParameters['applicationId']}")) String applicationId) {
+    public RepositoryItemReader<Request> readerRequest(@Value(("#{jobParameters['requestId']}")) String requestId) {
         Map<String, Sort.Direction> sortMap = new HashMap<>();
         sortMap.put("id", Sort.Direction.DESC);
         return new RepositoryItemReaderBuilder<Request>()
                 .repository(requestRepository)
-                .methodName("findRequestByStatusAndIdAppAndOperation")
-                .arguments(Arrays.asList(applicationId, Operation.DELETE_APP.getOperation()))
+                .methodName("findRequestByIdRequestAndOperation")
+                .arguments(Arrays.asList(requestId, Operation.DELETE_APP.getOperation()))
                 .sorts(sortMap)
                 .saveState(false)
                 .build();
@@ -303,8 +312,8 @@ public class BatchDeleteApplicationConfiguration {
     @Bean(destroyMethod = "")
     @StepScope
     public GroupMemberItemProcessor processorGroupMember(
-            @Value(("#{jobParameters['utenteCancellazione']}")) String utenteCancellazione,
-            @Value(("#{jobParameters['ufficioCancellazione']}")) String ufficioCancellazione,@Value(("#{jobParameters['currentTimeStamp']}")) Timestamp currentTimeStamp
+            @Value(("#{jobParameters['utente']}")) String utenteCancellazione,
+            @Value(("#{jobParameters['ufficio']}")) String ufficioCancellazione,@Value(("#{jobParameters['currentTimeStamp']}")) Timestamp currentTimeStamp
             ,@Value(("#{jobParameters['applicationId']}")) String applicationId
 
     ) {
@@ -351,8 +360,8 @@ public class BatchDeleteApplicationConfiguration {
 
     @Bean
     @StepScope
-    public GroupsItemProcessor processorGroup(@Value(("#{jobParameters['utenteCancellazione']}")) String utenteCancellazione,
-                                              @Value(("#{jobParameters['ufficioCancellazione']}")) String ufficioCancellazione, @Value(("#{jobParameters['currentTimeStamp']}")) Timestamp currentTimeStamp) {
+    public GroupsItemProcessor processorGroup(@Value(("#{jobParameters['utente']}")) String utenteCancellazione,
+                                              @Value(("#{jobParameters['ufficio']}")) String ufficioCancellazione, @Value(("#{jobParameters['currentTimeStamp']}")) Timestamp currentTimeStamp) {
         return new GroupsItemProcessor(groupsAggregazioneRepository,ruoloQualificaAssegnabilitaRepository,utenteCancellazione,ufficioCancellazione,currentTimeStamp);
     }
 
@@ -443,8 +452,8 @@ public class BatchDeleteApplicationConfiguration {
     }
     @Bean(destroyMethod = "")
     @StepScope
-    public ApplicazioneMotivazioneItemProcessListener applicazioneMotivazioneItemProcessListener(@Value(("#{jobParameters['utenteCancellazione']}")) String utenteCancellazione,
-                                                                                                 @Value(("#{jobParameters['ufficioCancellazione']}")) String ufficioCancellazione, @Value(("#{jobParameters['currentTimeStamp']}")) Timestamp currentTimeStamp) {
+    public ApplicazioneMotivazioneItemProcessListener applicazioneMotivazioneItemProcessListener(@Value(("#{jobParameters['utente']}")) String utenteCancellazione,
+                                                                                                 @Value(("#{jobParameters['ufficio']}")) String ufficioCancellazione, @Value(("#{jobParameters['currentTimeStamp']}")) Timestamp currentTimeStamp) {
         return new ApplicazioneMotivazioneItemProcessListener(utenteCancellazione,ufficioCancellazione,currentTimeStamp);
     }
 
@@ -501,15 +510,15 @@ public class BatchDeleteApplicationConfiguration {
     }
     @Bean(destroyMethod = "")
     @StepScope
-    public ApplicMotivMemberItemProcessListener applicMotivMemberItemProcessListener(@Value(("#{jobParameters['utenteCancellazione']}")) String utenteCancellazione,
-                                                                                     @Value(("#{jobParameters['ufficioCancellazione']}")) String ufficioCancellazione, @Value(("#{jobParameters['currentTimeStamp']}")) Timestamp currentTimeStamp) {
+    public ApplicMotivMemberItemProcessListener applicMotivMemberItemProcessListener(@Value(("#{jobParameters['utente']}")) String utenteCancellazione,
+                                                                                     @Value(("#{jobParameters['ufficio']}")) String ufficioCancellazione, @Value(("#{jobParameters['currentTimeStamp']}")) Timestamp currentTimeStamp) {
         return new ApplicMotivMemberItemProcessListener(utenteCancellazione,ufficioCancellazione,currentTimeStamp);
     }
 
     @Bean
     @StepScope
-    public ApplicMotivMemberItemProcessor processorApplicMotivMember(@Value(("#{jobParameters['utenteCancellazione']}")) String utenteCancellazione,
-                                                                     @Value(("#{jobParameters['ufficioCancellazione']}")) String ufficioCancellazione,
+    public ApplicMotivMemberItemProcessor processorApplicMotivMember(@Value(("#{jobParameters['utente']}")) String utenteCancellazione,
+                                                                     @Value(("#{jobParameters['ufficio']}")) String ufficioCancellazione,
                                                                      @Value(("#{jobParameters['currentTimeStamp']}")) Timestamp currentTimeStamp) {
         return new ApplicMotivMemberItemProcessor(utenteCancellazione,ufficioCancellazione,currentTimeStamp);
     }
@@ -562,15 +571,15 @@ public class BatchDeleteApplicationConfiguration {
 
     @Bean(destroyMethod = "")
     @StepScope
-    public ApplicazioneItemProcessListener applicazioneItemProcessListener(@Value(("#{jobParameters['utenteCancellazione']}")) String utenteCancellazione,
-                                                                           @Value(("#{jobParameters['ufficioCancellazione']}")) String ufficioCancellazione, @Value(("#{jobParameters['currentTimeStamp']}")) Timestamp currentTimeStamp) {
+    public ApplicazioneItemProcessListener applicazioneItemProcessListener(@Value(("#{jobParameters['utente']}")) String utenteCancellazione,
+                                                                           @Value(("#{jobParameters['ufficio']}")) String ufficioCancellazione, @Value(("#{jobParameters['currentTimeStamp']}")) Timestamp currentTimeStamp) {
         return new ApplicazioneItemProcessListener(utenteCancellazione,ufficioCancellazione,currentTimeStamp);
     }
 
     @Bean
     @StepScope
-    public ApplicazioneItemProcessor processorApplicazione(@Value(("#{jobParameters['utenteCancellazione']}")) String utenteCancellazione,
-                                                           @Value(("#{jobParameters['ufficioCancellazione']}")) String ufficioCancellazione,
+    public ApplicazioneItemProcessor processorApplicazione(@Value(("#{jobParameters['utente']}")) String utenteCancellazione,
+                                                           @Value(("#{jobParameters['ufficio']}")) String ufficioCancellazione,
                                                            @Value(("#{jobParameters['currentTimeStamp']}")) Timestamp currentTimeStamp) {
         return new ApplicazioneItemProcessor(utenteCancellazione,ufficioCancellazione,currentTimeStamp);
     }

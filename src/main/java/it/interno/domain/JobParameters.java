@@ -5,8 +5,6 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 import lombok.ToString;
 
-import java.sql.Timestamp;
-
 /**
  * @author mirco.cennamo on 06/08/2024
  * @project portale-gestioneapplicazioni-service-batch
@@ -15,20 +13,32 @@ import java.sql.Timestamp;
 @ToString
 public class JobParameters {
 
-    @NotNull(message = "campo applicationId non valorizzato")
-    @Size(min = 1, message = "campo applicationId non valorizzato")
-    private String applicationId;
-    @NotNull(message = "campo utenteCancellazione non valorizzato")
-    @Size(min = 1, message = "campo utenteCancellazione non valorizzato")
-    private String utenteCancellazione;
-    @NotNull(message = "campo ufficioCancellazione non valorizzato")
-    @Size(min = 1, message = "campo ufficioCancellazione non valorizzato")
-    private String ufficioCancellazione;
+
+    @NotNull(message = "campo requestId non valorizzato")
+    @Size(min = 1, message = "campo requestId non valorizzato")
+    private String requestId;
+
+
+
+
+
+    @NotNull(message = "campo utente non valorizzato")
+    @Size(min = 1, message = "campo utente non valorizzato")
+    private String utente;
+
+
+    @NotNull(message = "campo ufficio non valorizzato")
+    @Size(min = 1, message = "campo ufficio non valorizzato")
+    private String ufficio;
+
     @NotNull(message = "campo operation non valorizzato")
     @Size(min = 1, message = "campo operation non valorizzato")
     private String operation;
+
     @NotNull(message = "campo currentDate non valorizzato")
     private String currentDate;
+
+    private String applicationId;
 
     private String nomeRuolo;
 

@@ -1,4 +1,4 @@
-package it.interno.batch;
+package it.interno.batch.delete;
 
 import it.interno.entity.Request;
 import it.interno.enumeration.Operation;
@@ -67,13 +67,13 @@ public class BatchDeleteGroupsConfiguration {
 
     @Bean(destroyMethod = "")
     @StepScope
-    public RepositoryItemReader<Request> readerDeleteGroups(@Value(("#{jobParameters['applicationId']}")) String applicationId) {
+    public RepositoryItemReader<Request> readerDeleteGroups(@Value(("#{jobParameters['requestId']}")) String requestId) {
         Map<String, Sort.Direction> sortMap = new HashMap<>();
         sortMap.put("id", Sort.Direction.DESC);
         return new RepositoryItemReaderBuilder<Request>()
                 .repository(requestRepository)
-                .methodName("findRequestByStatusAndIdAppAndOperation")
-                .arguments(Arrays.asList(applicationId, Operation.DELETE_ALL_GROUPS.getOperation()))
+                .methodName("findRequestByIdRequestAndOperation")
+                .arguments(Arrays.asList(requestId, Operation.DELETE_ALL_GROUPS.getOperation()))
                 .sorts(sortMap)
                 .saveState(false)
                 .build();

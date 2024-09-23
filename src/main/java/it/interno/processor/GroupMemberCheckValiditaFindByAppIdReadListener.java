@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.ItemReadListener;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.sql.Timestamp;
 import java.util.List;
@@ -43,7 +44,8 @@ public class GroupMemberCheckValiditaFindByAppIdReadListener implements ItemRead
     String nomeRuolo;
 
 
-
+    @Value("${enable.oim}")
+    private boolean enableOim;
 
     public GroupMemberCheckValiditaFindByAppIdReadListener(OimClient oimClient, String utenteCancellazione,
                                                            String ufficioCancellazione, Timestamp currentTimeStamp, String appId, String nomeRuolo){
@@ -71,7 +73,10 @@ public class GroupMemberCheckValiditaFindByAppIdReadListener implements ItemRead
                 groupMember.setUfficioCancellazione(ufficioCancellazione);
                 groupMember.setDataCancellazione(currentTimeStamp);
                 groupMemberRepository.save(groupMember);
-                oimClient.rimozioneRuolo(utenteCancellazione,groupMember.getNomeRuolo());
+                if(enableOim){
+                    oimClient.rimozioneRuolo(utenteCancellazione,groupMember.getNomeRuolo());
+                }
+
             }
         }else{
             log.debug("esistono altri ruoli associati non cancello il master utente {} , idApp {} codiceRuolo {} " , utenteCancellazione, appId, nomeRuolo);

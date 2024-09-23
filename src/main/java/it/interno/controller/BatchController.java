@@ -81,6 +81,20 @@ public class BatchController {
                         .body(JobResponse.builder()
                                 .jobId(jobId).build()).build());
             }
+            else if(Operation.UPDATE_ALL_GROUPS.equals(Operation.fromValue(jobParameters.getOperation()))){
+                Long jobId = jobService.updateAllGroupsJob(jobParameters);
+                return ResponseEntity.ok(ResponseDto.<JobResponse>builder()
+                        .code(HttpStatus.OK.value())
+                        .body(JobResponse.builder()
+                                .jobId(jobId).build()).build());
+            }
+            else if(Operation.UPDATE_ALL_REGOLE_SICUREZZA.equals(Operation.fromValue(jobParameters.getOperation()))){
+                Long jobId = jobService.updateAllRegoleSicurezzaJob(jobParameters);
+                return ResponseEntity.ok(ResponseDto.<JobResponse>builder()
+                        .code(HttpStatus.OK.value())
+                        .body(JobResponse.builder()
+                                .jobId(jobId).build()).build());
+            }
 
             return ResponseEntity.ok(ResponseDto.<JobResponse>builder()
                     .code(HttpStatus.BAD_REQUEST.value())
@@ -112,8 +126,8 @@ public class BatchController {
     private List<RequestDto>convert(List<Request> requests){
         return requests.stream().map(request -> RequestDto.builder()
                 .idApplicazione(request.getIdApplicazione())
-                .ufficioCancellazione(request.getUfficioCancellazione())
-                .utenteCancellazione(request.getUtenteCancellazione())
+                .ufficioCancellazione(request.getUfficio())
+                .utenteCancellazione(request.getUtente())
                 .operation(request.getOperation())
                 .status(request.getStatus())
                 .jobId(request.getJobId())

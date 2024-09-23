@@ -1,6 +1,7 @@
 package it.interno.client;
 
 
+import it.interno.domain.RuoloOimDto;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,4 +29,7 @@ public interface OimClient {
 
     @PostMapping("/ruolo-utente/disassociazione/utenti")
     void rimozioneRuoloAUtenti(@RequestParam String nomeRuolo, @RequestBody List<String> codiciUtenti);
+
+    @PutMapping("/ruolo/massivo")
+    void modificaRuoli(@RequestBody List<RuoloOimDto> input);
 }

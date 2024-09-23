@@ -1,4 +1,4 @@
-package it.interno.batch;
+package it.interno.batch.delete;
 
 import it.interno.client.OimClient;
 import it.interno.entity.GroupMembers;
@@ -73,9 +73,11 @@ public class BatchDeleteRegoleSicurezzaConfiguration {
                 .incrementer(new RunIdIncrementer())
                 .listener(JobCompletionNotificationListener)
                 .start(stepRequestDeleteAllRules)
+                //check validita
                 .next(stepRegoleByNomeRuoloAndAppId)
                 .next(stepGroupMemberGetByRuolo)
                 .next(stepGroupMemberUtentiDistintiByApp)
+                //Fine check validita
                 .next(stepGroupMemberfindByAppId)
                 .build();
     }
@@ -104,13 +106,13 @@ public class BatchDeleteRegoleSicurezzaConfiguration {
 
     @Bean(destroyMethod = "")
     @StepScope
-    public RepositoryItemReader<Request> readerRequestDeleteAllRules(@Value(("#{jobParameters['applicationId']}")) String applicationId) {
+    public RepositoryItemReader<Request> readerRequestDeleteAllRules(@Value(("#{jobParameters['requestId']}")) String requestId) {
         Map<String, Sort.Direction> sortMap = new HashMap<>();
         sortMap.put("id", Sort.Direction.DESC);
         return new RepositoryItemReaderBuilder<Request>()
                 .repository(requestRepository)
-                .methodName("findRequestByStatusAndIdAppAndOperation")
-                .arguments(Arrays.asList(applicationId, Operation.DELETE_ALL_REGOLE_SICUREZZA.getOperation()))
+                .methodName("findRequestByIdRequestAndOperation")
+                .arguments(Arrays.asList(requestId, Operation.DELETE_ALL_REGOLE_SICUREZZA.getOperation()))
                 .sorts(sortMap)
                 .saveState(false)
                 .build();
@@ -200,8 +202,8 @@ public class BatchDeleteRegoleSicurezzaConfiguration {
     @Bean(destroyMethod = "")
     @StepScope
     public GroupMemberCheckValiditaItemProcessor processorCheckValiditaGroupMember(
-            @Value(("#{jobParameters['utenteCancellazione']}")) String utenteCancellazione,
-            @Value(("#{jobParameters['ufficioCancellazione']}")) String ufficioCancellazione,@Value(("#{jobParameters['currentTimeStamp']}")) Timestamp currentTimeStamp
+            @Value(("#{jobParameters['utente']}")) String utenteCancellazione,
+            @Value(("#{jobParameters['ufficio']}")) String ufficioCancellazione,@Value(("#{jobParameters['currentTimeStamp']}")) Timestamp currentTimeStamp
             ,@Value(("#{jobParameters['applicationId']}")) String applicationId,@Value(("#{jobParameters['nomeRuolo']}")) String nomeRuolo
 
     ) {
@@ -265,8 +267,8 @@ public class BatchDeleteRegoleSicurezzaConfiguration {
     @Bean(destroyMethod = "")
     @StepScope
     public GroupMemberCheckValiditaUtenteDistintoItemProcessor processorCheckValiditautenteDistintoGroupMember(
-            @Value(("#{jobParameters['utenteCancellazione']}")) String utenteCancellazione,
-            @Value(("#{jobParameters['ufficioCancellazione']}")) String ufficioCancellazione,@Value(("#{jobParameters['currentTimeStamp']}")) Timestamp currentTimeStamp
+            @Value(("#{jobParameters['utente']}")) String utenteCancellazione,
+            @Value(("#{jobParameters['ufficio']}")) String ufficioCancellazione,@Value(("#{jobParameters['currentTimeStamp']}")) Timestamp currentTimeStamp
             ,@Value(("#{jobParameters['applicationId']}")) String applicationId,@Value(("#{jobParameters['nomeRuolo']}")) String nomeRuolo
 
     ) {
@@ -299,8 +301,8 @@ public class BatchDeleteRegoleSicurezzaConfiguration {
 
     @Bean(destroyMethod = "")
     @StepScope
-    public GroupMemberCheckValiditaFindByAppIdReadListener groupMemberCheckValiditaFindByAppIdReadListener(@Value(("#{jobParameters['utenteCancellazione']}")) String utenteCancellazione,
-                                                                                   @Value(("#{jobParameters['ufficioCancellazione']}")) String ufficioCancellazione,
+    public GroupMemberCheckValiditaFindByAppIdReadListener groupMemberCheckValiditaFindByAppIdReadListener(@Value(("#{jobParameters['utente']}")) String utenteCancellazione,
+                                                                                   @Value(("#{jobParameters['ufficio']}")) String ufficioCancellazione,
                                                                                    @Value(("#{jobParameters['currentTimeStamp']}")) Timestamp currentTimeStamp,
                                                                                    @Value(("#{jobParameters['applicationId']}")) String applicationId,
                                                                                    @Value(("#{jobParameters['nomeRuolo']}")) String nomeRuolo) {

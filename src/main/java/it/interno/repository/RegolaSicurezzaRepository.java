@@ -28,4 +28,8 @@ public interface RegolaSicurezzaRepository extends JpaRepository<RegolaSicurezza
     @Query(value = "SELECT SSD_SECURITY.IS_RUOLO_APPLICATIVO_ASSEGNABILE(:codiceUtente, :idApp, :codiceRuolo) FROM DUAL", nativeQuery = true)
     Integer isRuoloApplicativoAssegnabile(String codiceUtente, String idApp, String codiceRuolo);
 
+    @Query(value ="SELECT r.* FROM SSD_SECURITY.SEC_REGOLE_SICUREZZA r WHERE r.G_NAME = ?1 AND r.APP_ID = ?2 AND r.ID_BLOCCO_REGOLA = ?3 AND r.DATE_CAN IS NULL",
+            nativeQuery = true)
+    List<RegolaSicurezza> getRegoleByNomeRuoloAndAppIdAndIdRegola(String nomeRuolo, String appId, Integer idRegola);
+
 }

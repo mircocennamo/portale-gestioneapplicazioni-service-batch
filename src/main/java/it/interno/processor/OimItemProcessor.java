@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.item.ItemProcessor;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.util.Arrays;
 
@@ -22,6 +23,9 @@ public class OimItemProcessor implements ItemProcessor<Groups, Groups> {
 
     private String appId;
 
+    @Value("${enable.oim}")
+    private boolean enableOim;
+
 
 
 
@@ -35,14 +39,15 @@ public class OimItemProcessor implements ItemProcessor<Groups, Groups> {
     public Groups process(final Groups group) {
         //chiamo oim per cancellare l'utente dal gruppo
 
-       if("13".equals(appId)){
-           throw new RuntimeException("Simulo errore da oim");
+
+
+
+       if(enableOim) {
+           if("13".equals(appId)){
+               throw new RuntimeException("Simulo errore da oim");
+           }
+           oimClient.deleteRuoli(Arrays.asList(group).stream().map(Groups::getNome).toList());
        }
-
-
-
-         oimClient.deleteRuoli(Arrays.asList(group).stream().map(Groups::getNome).toList());
-
       return group;
     }
 

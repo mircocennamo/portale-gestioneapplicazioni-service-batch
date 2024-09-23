@@ -123,42 +123,60 @@ CREATE TABLE SSD_SECURITY.TASK_LOCK  (
 
 
 
---CREATE TABLE request  (
---    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
---    idApplicazione VARCHAR(20),
---    utenteCancellazione VARCHAR(20),
---    ufficioCancellazione VARCHAR(30),
---    operation VARCHAR(30)
---);
-
---status = 1 da lavorare
---status = 2 in lavorazione
---status = 3 lavorato ok
---status = 4 lavorato ko
-
-insert into SSD_SECURITY.REQUEST   (idApplicazione, utenteCancellazione, ufficioCancellazione, operation,status) values ('12', 'mirco1', 'ufficiomio', 'DELETE_APP','TO_BE_ASSIGNED');
-insert into SSD_SECURITY.REQUEST   (idApplicazione, utenteCancellazione, ufficioCancellazione, operation,status) values ('13', 'mirco2', 'ufficiomio', 'DELETE_ALL_GROUPS','TO_BE_ASSIGNED');
-
-insert into SSD_SECURITY.REQUEST   (idApplicazione, utenteCancellazione, ufficioCancellazione, operation,status) values ('14', 'mirco1', 'ufficiomio', 'DELETE_ALL_REGOLE_SICUREZZA','TO_BE_ASSIGNED');
-insert into SSD_SECURITY.REQUEST   (idApplicazione, utenteCancellazione, ufficioCancellazione, operation,status) values ('15', 'mirco2', 'ufficiomio', 'DELETE_APP','TO_BE_ASSIGNED');
-
-insert into SSD_SECURITY.REQUEST   (idApplicazione, utenteCancellazione, ufficioCancellazione, operation,status) values ('16', 'mirco1', 'ufficiomio', 'DELETE_APP','TO_BE_ASSIGNED');
-insert into SSD_SECURITY.REQUEST   (idApplicazione, utenteCancellazione, ufficioCancellazione, operation,status) values ('17', 'mirco2', 'ufficiomio', 'DELETE_APP','TO_BE_ASSIGNED');
-
-insert into SSD_SECURITY.REQUEST   (idApplicazione, utenteCancellazione, ufficioCancellazione, operation,status) values ('18', 'mirco1', 'ufficiomio', 'DELETE_APP','TO_BE_ASSIGNED');
-insert into SSD_SECURITY.REQUEST   (idApplicazione, utenteCancellazione, ufficioCancellazione, operation,status) values ('19', 'mirco2', 'ufficiomio', 'DELETE_APP','TO_BE_ASSIGNED');
-
-insert into SSD_SECURITY.REQUEST   (idApplicazione, utenteCancellazione, ufficioCancellazione, operation,status) values ('20', 'mirco1', 'ufficiomio', 'DELETE_APP','TO_BE_ASSIGNED');
-insert into SSD_SECURITY.REQUEST   (idApplicazione, utenteCancellazione, ufficioCancellazione, operation,status) values ('21', 'mirco2', 'ufficiomio', 'DELETE_APP','TO_BE_ASSIGNED');
-
-insert into SSD_SECURITY.REQUEST   (idApplicazione, utenteCancellazione, ufficioCancellazione, operation,status) values ('22', 'mirco1', 'ufficiomio', 'DELETE_APP','TO_BE_ASSIGNED');
-insert into SSD_SECURITY.REQUEST   (idApplicazione, utenteCancellazione, ufficioCancellazione, operation,status) values ('23', 'mirco2', 'ufficiomio', 'DELETE_APP','TO_BE_ASSIGNED');
-
-insert into SSD_SECURITY.REQUEST   (idApplicazione, utenteCancellazione, ufficioCancellazione, operation,status) values ('23', 'mirco2', 'ufficiomio', 'OTHER','TO_BE_ASSIGNED');
 
 
---insert into request   (idApplicazione, utenteCancellazione, ufficioCancellazione, operation,status) values ('14', 'mirco3', 'ufficiomio', 'delete',1);
---insert into request   (idApplicazione, utenteCancellazione, ufficioCancellazione, operation,status) values ('15', 'mirco4', 'ufficiomio', 'delete',1);
+insert into SSD_SECURITY.REQUEST   (idApplicazione, utente, ufficio, operation,status,date) values ('12', 'utente1', 'ufficio1', 'DELETE_APP','TO_BE_ASSIGNED','2024-08-26 15:00:00');
+
+insert into SSD_SECURITY.REQUEST   (idApplicazione, utente, ufficio, operation,status,date) values ('13', 'utente2', 'ufficio2', 'DELETE_ALL_GROUPS','TO_BE_ASSIGNED','2024-08-27 15:00:00');
+
+
+insert into SSD_SECURITY.REQUEST   (idApplicazione, utente, ufficio, operation,status,date,nomeRuolo) values ('14', 'utente3', 'ufficio3', 'DELETE_ALL_REGOLE_SICUREZZA','TO_BE_ASSIGNED','2024-08-28 15:00:00','miaRegola2');
+
+
+insert into SSD_SECURITY.REQUEST   (idApplicazione, utente, ufficio, operation,status,date,tipoMotivazioneId) values ('15', 'utente4', 'ufficio4', 'DELETE_ALL_MOTIVAZIONI','TO_BE_ASSIGNED','2024-08-29 15:00:00','2');
+
+
+
+
+
+
+
+ insert into SSD_SECURITY.REQUEST(utente, ufficio, operation,status,groupUpdate) values ('utente5', 'ufficio5', 'UPDATE_ALL_GROUPS','TO_BE_ASSIGNED',
+'[
+     {
+         "nome": "miaRegola1",
+         "app": "12"
+     },
+     {
+         "nome": "miaRegola11",
+         "app": "12"
+     }
+ ]'
+);
+
+ insert into SSD_SECURITY.REQUEST(utente, ufficio, operation,status,REGOLESICUREZZAUPDATE) values ('utente5', 'ufficio5', 'UPDATE_ALL_REGOLE_SICUREZZA','TO_BE_ASSIGNED',
+'[
+     {
+         "ruolo": "miaRegola1",
+         "appId": "12",
+         "numeroRegola":"1",
+         "progressivoRegola":"1",
+         "dataInserimento":"2024-08-26 15:00:00"
+     },
+     {
+              "ruolo": "miaRegola11",
+              "appId": "12",
+              "numeroRegola":"2",
+              "progressivoRegola":"1",
+              "dataInserimento":"2024-08-26 15:00:00"
+     }
+ ]'
+);
+
+
+
+
+
 
 
 insert into SSD_SECURITY.GROUPMEMBERS   (G_MEMBER,G_NAME,APP_ID) values ('bollo','pippo','12');
@@ -247,7 +265,7 @@ INSERT into SSD_SECURITY.SEC_APPLIC_MOTIV_MEMBERS(G_MEMBER,APP_ID,ID_TIPO_MOTIVA
 INSERT into SSD_SECURITY.SEC_APPLIC_MOTIV_MEMBERS(G_MEMBER,APP_ID,ID_TIPO_MOTIVAZIONE) values('paolo','14','1');
 INSERT into SSD_SECURITY.SEC_APPLIC_MOTIV_MEMBERS(G_MEMBER,APP_ID,ID_TIPO_MOTIVAZIONE) values('ciccio','14','1');
 
-INSERT into SSD_SECURITY.SEC_APPLIC_MOTIV_MEMBERS(G_MEMBER,APP_ID,ID_TIPO_MOTIVAZIONE) values('mirco','14','2');
+INSERT into SSD_SECURITY.SEC_APPLIC_MOTIV_MEMBERS(G_MEMBER,APP_ID,ID_TIPO_MOTIVAZIONE) values('mirco','15','2');
 
 INSERT into SSD_SECURITY.SEC_APPLICAZIONE(APP_ID,APP_NAME) values('12','miaApp1');
 INSERT into SSD_SECURITY.SEC_APPLICAZIONE(APP_ID,APP_NAME) values('13','miaApp2');
